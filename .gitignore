@@ -8,3 +8,4 @@ target/
 test-results/
 playwright-report/
 apps/web/e2e/__screens__/
+apps/web/public/og/
