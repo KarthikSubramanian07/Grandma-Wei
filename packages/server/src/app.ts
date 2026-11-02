@@ -22,6 +22,12 @@ export interface Env {
   READS_PAUSED?: string;
   READS_PER_HOUR?: string;
   READS_PER_DAY?: string;
+  /**
+   * Test only: "1" answers photo reads with the Traveler practice room (and,
+   * on a retake, the same room with its chores done), so the whole photo loop
+   * can be tested end to end without an API key. Never set in production.
+   */
+  FAKE_EYES?: string;
   DB?: D1Database;
 }
 
@@ -130,7 +136,8 @@ export function createApp(deps: Deps = {}) {
   app.post("/api/read", async (c) => {
     const env = c.env ?? {};
     if (env.READS_PAUSED === "1") return fail(c, 503, "napping");
-    if (!env.ANTHROPIC_API_KEY) return fail(c, 503, "no_eyes");
+    const fake = env.FAKE_EYES === "1" && !env.ANTHROPIC_API_KEY;
+    if (!env.ANTHROPIC_API_KEY && !fake) return fail(c, 503, "no_eyes");
 
     let body: { image?: unknown; media_type?: unknown; prev?: { signed?: unknown; sig?: unknown } };
     try {
@@ -154,11 +161,15 @@ export function createApp(deps: Deps = {}) {
 
     let scene: Scene;
     try {
-      scene = await eyes(
-        { apiKey: env.ANTHROPIC_API_KEY, model: env.VISION_MODEL ?? DEFAULT_MODEL, effort: env.VISION_EFFORT ?? "medium" },
-        image,
-        media_type as MediaType,
-      );
+      scene = fake
+        ? body.prev
+          ? engine.imagine(SAMPLES.traveler!.scene, ["move_bed", "declutter", "real_plant"])
+          : SAMPLES.traveler!.scene
+        : await eyes(
+            { apiKey: env.ANTHROPIC_API_KEY!, model: env.VISION_MODEL ?? DEFAULT_MODEL, effort: env.VISION_EFFORT ?? "medium" },
+            image,
+            media_type as MediaType,
+          );
     } catch (e) {
       const code = e instanceof EyesError ? e.code : "upstream";
       if (code === "refused") return fail(c, 400, "refused");
@@ -172,12 +183,14 @@ export function createApp(deps: Deps = {}) {
     const diff = prev ? engine.diff(prev.scene, scene) : null;
     const id = randomId(9);
     const draft = compose(scene, reading, id, diff ?? undefined);
-    const voice = await tongue(
-      { apiKey: env.ANTHROPIC_API_KEY, model: env.VOICE_MODEL ?? DEFAULT_MODEL, effort: env.VOICE_EFFORT ?? "low" },
-      scene,
-      reading,
-      draft,
-    );
+    const voice = fake
+      ? draft
+      : await tongue(
+          { apiKey: env.ANTHROPIC_API_KEY!, model: env.VOICE_MODEL ?? DEFAULT_MODEL, effort: env.VOICE_EFFORT ?? "low" },
+          scene,
+          reading,
+          draft,
+        );
     return c.json(await envelope(env, { v: 1, id, sample: null, scene, voice, diff }));
   });
 
