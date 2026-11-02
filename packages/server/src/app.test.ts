@@ -25,7 +25,6 @@ function app(opts: { scene?: Scene; store?: MemoryStore | null; tongueThrows?: b
       if (opts.tongueThrows) throw new Error("boom");
       return { ...draft, headline: "Coffin position, and the suitcase is watching. I'm worried.", from_bank: false };
     },
-    card: async () => new Uint8Array([137, 80, 78, 71]),
   });
   const req = (path: string, init?: RequestInit, e: Record<string, unknown> = env) => a.request(path, init, e);
   return { req, store, looked: () => looked };
@@ -155,14 +154,18 @@ describe("sharing", () => {
     expect(r.status).toBe(403);
   });
 
-  test("card and og images come back as PNG", async () => {
+});
+
+describe("share page meta", () => {
+  test("puts her headline in the link preview and points at the score card", async () => {
+    const { shareMeta } = await import("./meta");
+    const e = (await (await app().req("/api/sample/traveler")).json()) as Envelope;
     const h = app();
-    const e = await sampleEnvelope();
-    const card = await h.req("/api/card", post({ signed: e.signed, sig: e.sig, format: "story" }));
-    expect(card.headers.get("content-type")).toBe("image/png");
-    const { id } = await json(await h.req("/api/share", post({ signed: e.signed, sig: e.sig })));
-    const og = await h.req(`/api/og/${id}.png`);
-    expect(og.status).toBe(200);
-    expect(og.headers.get("content-type")).toBe("image/png");
+    const { payload } = await json(await h.req("/api/share", post({ signed: e.signed, sig: e.sig })));
+    const { title, tags } = shareMeta(payload, "https://grandma-wei.pages.dev");
+    expect(title).toBe("Grandma Wei gave this bedroom 49/100");
+    expect(tags).toContain("https://grandma-wei.pages.dev/og/49.png");
+    expect(tags).toContain(`content="${e.result.voice.headline.replace(/'/g, "'")}"`);
+    expect(tags).toContain("noindex");
   });
 });

@@ -1,4 +1,5 @@
-export { createApp, type CardFormat, type Deps, type Env } from "./app";
+export { createApp, type Deps, type Env } from "./app";
+export { shareMeta } from "./meta";
 export { engine, initEngine } from "./engine";
 export type { Envelope, ReadingResult, SharePayload, Signed } from "./result";
 export { SAMPLES } from "./samples";

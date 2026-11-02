@@ -5,7 +5,7 @@ import { compose } from "@gw/voice";
 import { engine } from "./engine";
 import { EyesError, look, type MediaType } from "./eyes";
 import { checkLimit } from "./limit";
-import { type Envelope, type ReadingResult, type SharePayload, type Signed, sharePayload } from "./result";
+import { type Envelope, type ReadingResult, type Signed, sharePayload } from "./result";
 import { SAMPLES } from "./samples";
 import { randomId, sha256, sign, verify } from "./sign";
 import { D1Store, type Store } from "./store";
@@ -25,13 +25,9 @@ export interface Env {
   DB?: D1Database;
 }
 
-export type CardFormat = "post" | "story" | "og";
-
 export interface Deps {
   eyes?: typeof look;
   tongue?: typeof personalize;
-  /** Renders a scorecard PNG. Injected so the server package stays light in tests. */
-  card?: (payload: SharePayload, format: CardFormat, origin: string) => Promise<Uint8Array>;
   /** Override storage (tests). */
   store?: Store | null;
 }
@@ -219,32 +215,6 @@ export function createApp(deps: Deps = {}) {
     if ((await sha256(token)) !== row.deleteHash) return fail(c, 403, "forged");
     await store.deleteShare(c.req.param("id"));
     return c.json({ deleted: true });
-  });
-
-  /** A scorecard image for a reading you hold, without publishing anything. */
-  app.post("/api/card", async (c) => {
-    if (!deps.card) return fail(c, 503, "no_fridge");
-    const env = c.env ?? {};
-    const body = await c.req.json().catch(() => ({}));
-    const s = await openSigned(env, body.signed, body.sig);
-    if (!s) return fail(c, 403, "forged");
-    const format: CardFormat = body.format === "story" ? "story" : body.format === "og" ? "og" : "post";
-    const payload = sharePayload(s.id, Date.now(), engine.version(), s, engine.read(s.scene));
-    const png = await deps.card(payload, format, new URL(c.req.url).origin);
-    return c.body(png as Uint8Array<ArrayBuffer>, 200, { "Content-Type": "image/png", "Cache-Control": "no-store" });
-  });
-
-  /** The OpenGraph image for a shared scorecard. */
-  app.get("/api/og/:file", async (c) => {
-    if (!deps.card) return fail(c, 503, "no_fridge");
-    const store = storeFor(c.env ?? {});
-    if (!store) return fail(c, 503, "no_fridge");
-    const id = c.req.param("file").replace(/\.png$/, "");
-    const row = await store.getShare(id);
-    if (!row) return fail(c, 404, "not_found");
-    const format: CardFormat = c.req.query("format") === "story" ? "story" : c.req.query("format") === "post" ? "post" : "og";
-    const png = await deps.card(JSON.parse(row.payload), format, new URL(c.req.url).origin);
-    return c.body(png as Uint8Array<ArrayBuffer>, 200, { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" });
   });
 
   app.notFound((c) => fail(c, 404, "not_found"));
