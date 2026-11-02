@@ -8,6 +8,7 @@ import { Fridge } from "./pages/Fridge";
 import { Home } from "./pages/Home";
 import { NotFound } from "./pages/NotFound";
 import { How } from "./pages/How";
+import { Info } from "./pages/Info";
 import { Privacy } from "./pages/Privacy";
 import { Reading } from "./pages/Reading";
 import { Share } from "./pages/Share";
@@ -21,6 +22,7 @@ function route(path: string) {
   if (path === "/fridge") return <Fridge />;
   if (path === "/how") return <How />;
   if (path === "/privacy") return <Privacy />;
+  if (path === "/about" || path === "/contact") return <Info key={path} path={path} />;
   if (path === "/" || path === "") return <Home />;
   return <NotFound />;
 }
@@ -60,6 +62,12 @@ export function App() {
           Made with love and mild disappointment. Not affiliated with any real grandmother, though she has heard about this.
         </span>
         <span className="footer-links">
+          <a href="/about" onClick={onLinkClick}>
+            About
+          </a>
+          <a href="/contact" onClick={onLinkClick}>
+            Contact
+          </a>
           <a href="/privacy" onClick={onLinkClick}>
             Privacy
           </a>
