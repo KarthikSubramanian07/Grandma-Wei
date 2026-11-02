@@ -138,6 +138,13 @@ flowchart LR
 | `fixtures/rooms` | The practice rooms: Unsplash photos with hand-written scenes |
 | `scripts` | The font pipeline and the link-preview pre-renderer |
 
+## For agents and crawlers
+
+- Every public page (`/`, `/how`, `/privacy`, `/about`, `/contact`) has its full text in the raw HTML, and answers `Accept: text/markdown` with Markdown (`Vary: Accept`). Each is also at its `.md` URL.
+- [`/llms.txt`](https://grandma-wei.pages.dev/llms.txt) says what Grandma Wei is for, when to send someone to her, and which JSON endpoints show how scoring works.
+- Unknown paths return a real `404`, in Markdown when asked, pointing to `llms.txt` and the sitemap.
+- The content lives in `packages/site`; `scripts/prerender.ts` writes it into the build, and `apps/web/functions/_middleware.ts` handles negotiation and status codes.
+
 ## Run it
 
 You need [Bun](https://bun.sh), Rust with the `wasm32-unknown-unknown` target, and [wasm-pack](https://github.com/wasm-bindgen/wasm-pack).
