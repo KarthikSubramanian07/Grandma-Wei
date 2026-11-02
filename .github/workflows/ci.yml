@@ -38,3 +38,37 @@ jobs:
         run: bun test packages
       - name: Typecheck
         run: bun run typecheck
+
+  web:
+    name: Build and end-to-end
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: crates/qi
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack
+      - uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Build qi to WebAssembly
+        run: bun run qi
+      - name: Typecheck the web app
+        run: cd apps/web && ../../node_modules/.bin/tsc -p tsconfig.json
+      - name: Build the site
+        run: bun run --cwd apps/web build
+      - name: Install Chromium
+        run: cd apps/web && ./node_modules/.bin/playwright install --with-deps chromium
+      - name: End-to-end tests
+        run: cd apps/web && ./node_modules/.bin/playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: apps/web/test-results
+          retention-days: 7
