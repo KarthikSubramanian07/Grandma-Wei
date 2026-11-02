@@ -392,3 +392,26 @@ a {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* Grandma's tea, gently steaming. */
+.grandma .steam {
+  animation: steam 3.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.grandma .steam.s2 {
+  animation-delay: 1.4s;
+}
+@keyframes steam {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scaleY(0.8);
+  }
+  40% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(1.1);
+  }
+}
