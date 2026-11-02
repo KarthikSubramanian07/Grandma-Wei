@@ -1,0 +1,255 @@
+{
+  "state": "ok",
+  "score": 43,
+  "grade": "worrying",
+  "pillars": {
+    "command": 16,
+    "flow": 36,
+    "rest": 66,
+    "light": 63,
+    "balance": 64
+  },
+  "findings": [
+    {
+      "rule": "bed_door",
+      "pillar": "command",
+      "status": "bad",
+      "quality": 0.0,
+      "drag": 0.9
+    },
+    {
+      "rule": "headboard",
+      "pillar": "command",
+      "status": "bad",
+      "quality": 0.3,
+      "drag": 0.315
+    },
+    {
+      "rule": "headboard_solid",
+      "pillar": "command",
+      "status": "warn",
+      "quality": 0.5,
+      "drag": 0.12
+    },
+    {
+      "rule": "desk",
+      "pillar": "command",
+      "status": "bad",
+      "quality": 0.15,
+      "drag": 0.51
+    },
+    {
+      "rule": "door_path",
+      "pillar": "flow",
+      "status": "warn",
+      "quality": 0.5,
+      "drag": 0.25
+    },
+    {
+      "rule": "door_opens_fully",
+      "pillar": "flow",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "clutter",
+      "pillar": "flow",
+      "status": "bad",
+      "quality": 0.1,
+      "drag": 0.563
+    },
+    {
+      "rule": "under_bed",
+      "pillar": "flow",
+      "status": "bad",
+      "quality": 0.1,
+      "drag": 0.27
+    },
+    {
+      "rule": "door_window_aligned",
+      "pillar": "flow",
+      "status": "bad",
+      "quality": 0.4,
+      "drag": 0.12
+    },
+    {
+      "rule": "mirror_facing_bed",
+      "pillar": "rest",
+      "status": "bad",
+      "quality": 0.1,
+      "drag": 0.288
+    },
+    {
+      "rule": "over_bed",
+      "pillar": "rest",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "electronics_near_bed",
+      "pillar": "rest",
+      "status": "warn",
+      "quality": 0.6,
+      "drag": 0.112
+    },
+    {
+      "rule": "bed_access",
+      "pillar": "rest",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "sharp_corners",
+      "pillar": "rest",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "natural_light",
+      "pillar": "light",
+      "status": "warn",
+      "quality": 0.7,
+      "drag": 0.072
+    },
+    {
+      "rule": "artificial_light",
+      "pillar": "light",
+      "status": "warn",
+      "quality": 0.5,
+      "drag": 0.072
+    },
+    {
+      "rule": "plants",
+      "pillar": "balance",
+      "status": "warn",
+      "quality": 0.6,
+      "drag": 0.062
+    },
+    {
+      "rule": "elements",
+      "pillar": "balance",
+      "status": "warn",
+      "quality": 0.66,
+      "drag": 0.088
+    }
+  ],
+  "chores": [
+    {
+      "id": "move_bed",
+      "because": [
+        "bed_door",
+        "headboard"
+      ],
+      "effort": "an_hour",
+      "points": 16,
+      "element": null
+    },
+    {
+      "id": "move_desk",
+      "because": [
+        "desk"
+      ],
+      "effort": "an_hour",
+      "points": 7,
+      "element": null
+    },
+    {
+      "id": "declutter",
+      "because": [
+        "clutter"
+      ],
+      "effort": "a_weekend",
+      "points": 7,
+      "element": null
+    },
+    {
+      "id": "turn_the_mirror",
+      "because": [
+        "mirror_facing_bed"
+      ],
+      "effort": "two_minutes",
+      "points": 5,
+      "element": null
+    },
+    {
+      "id": "clear_door_path",
+      "because": [
+        "door_path"
+      ],
+      "effort": "twenty_minutes",
+      "points": 3,
+      "element": null
+    },
+    {
+      "id": "clear_under_bed",
+      "because": [
+        "under_bed"
+      ],
+      "effort": "twenty_minutes",
+      "points": 3,
+      "element": null
+    },
+    {
+      "id": "screens_out",
+      "because": [
+        "electronics_near_bed"
+      ],
+      "effort": "two_minutes",
+      "points": 2,
+      "element": null
+    },
+    {
+      "id": "real_plant",
+      "because": [
+        "plants"
+      ],
+      "effort": "twenty_minutes",
+      "points": 2,
+      "element": null
+    },
+    {
+      "id": "warm_lamp",
+      "because": [
+        "artificial_light"
+      ],
+      "effort": "an_afternoon",
+      "points": 2,
+      "element": null
+    },
+    {
+      "id": "balance_elements",
+      "because": [
+        "elements"
+      ],
+      "effort": "twenty_minutes",
+      "points": 1,
+      "element": "water"
+    },
+    {
+      "id": "break_the_line",
+      "because": [
+        "door_window_aligned"
+      ],
+      "effort": "twenty_minutes",
+      "points": 1,
+      "element": null
+    },
+    {
+      "id": "solid_headboard",
+      "because": [
+        "headboard_solid"
+      ],
+      "effort": "an_afternoon",
+      "points": 1,
+      "element": null
+    }
+  ],
+  "headline": "bed_door",
+  "unseen": [],
+  "magnets": [],
+  "potential": 96
+}

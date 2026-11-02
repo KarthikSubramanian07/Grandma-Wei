@@ -1,0 +1,152 @@
+{
+  "state": "ok",
+  "score": 100,
+  "grade": "id_sleep_here",
+  "pillars": {
+    "command": 100,
+    "flow": 100,
+    "rest": 100,
+    "light": 100,
+    "balance": 100
+  },
+  "findings": [
+    {
+      "rule": "bed_door",
+      "pillar": "command",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "headboard",
+      "pillar": "command",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "headboard_solid",
+      "pillar": "command",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "desk",
+      "pillar": "command",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "door_path",
+      "pillar": "flow",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "door_opens_fully",
+      "pillar": "flow",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "clutter",
+      "pillar": "flow",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "under_bed",
+      "pillar": "flow",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "door_window_aligned",
+      "pillar": "flow",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "mirror_facing_bed",
+      "pillar": "rest",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "over_bed",
+      "pillar": "rest",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "electronics_near_bed",
+      "pillar": "rest",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "bed_access",
+      "pillar": "rest",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "sharp_corners",
+      "pillar": "rest",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "natural_light",
+      "pillar": "light",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "artificial_light",
+      "pillar": "light",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "plants",
+      "pillar": "balance",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    },
+    {
+      "rule": "elements",
+      "pillar": "balance",
+      "status": "good",
+      "quality": 1.0,
+      "drag": 0.0
+    }
+  ],
+  "chores": [],
+  "headline": null,
+  "unseen": [],
+  "magnets": [
+    "commanding_officer",
+    "plant_parent",
+    "clean_under_there",
+    "five_elements",
+    "eighty_club",
+    "id_sleep_here"
+  ],
+  "potential": 100
+}
