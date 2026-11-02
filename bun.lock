@@ -9,10 +9,6 @@
         "typescript": "^5.9.0",
       },
     },
-    "packages/card": {
-      "name": "@gw/card",
-      "version": "0.1.0",
-    },
     "packages/qi": {
       "name": "@gw/qi",
       "version": "0.1.0",
@@ -24,23 +20,18 @@
         "zod": "^4.1",
       },
     },
-    "packages/server": {
-      "name": "@gw/server",
-      "version": "0.1.0",
-    },
     "packages/voice": {
       "name": "@gw/voice",
       "version": "0.1.0",
+      "dependencies": {
+        "@gw/schema": "workspace:*",
+      },
     },
   },
   "packages": {
-    "@gw/card": ["@gw/card@workspace:packages/card"],
-
     "@gw/qi": ["@gw/qi@workspace:packages/qi"],
 
     "@gw/schema": ["@gw/schema@workspace:packages/schema"],
-
-    "@gw/server": ["@gw/server@workspace:packages/server"],
 
     "@gw/voice": ["@gw/voice@workspace:packages/voice"],
 
