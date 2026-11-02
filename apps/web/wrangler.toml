@@ -1,0 +1,20 @@
+# Cloudflare Pages project. Deploys from CI: see .github/workflows/deploy.yml.
+name = "grandma-wei"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-10-13"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+VISION_MODEL = "claude-opus-5-5"
+VOICE_MODEL = "claude-opus-5-5"
+VISION_EFFORT = "medium"
+VOICE_EFFORT = "low"
+READS_PER_HOUR = "12"
+READS_PER_DAY = "400"
+
+# The deploy workflow fills in database_id for the real database.
+[[d1_databases]]
+binding = "DB"
+database_name = "grandma-wei"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
