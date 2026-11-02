@@ -40,7 +40,13 @@ pub struct Chore {
     pub points: u32,
     /// For the elements chore: which element to bring in.
     pub element: Option<&'static str>,
+    /// Set when a deal-breaker caps the score: this chore's points only count
+    /// once that other chore is done ("+4 once the bed moves").
+    pub blocked_by: Option<&'static str>,
 }
+
+/// Chores that lift a deal-breaker cap, paired with the rule they fix.
+const CAP_CHORES: [(&str, &str); 3] = [("move_bed", "bed_door"), ("clear_door_path", "door_path"), ("declutter", "clutter")];
 
 struct Def {
     id: &'static str,
@@ -274,16 +280,46 @@ pub fn chores_for(f: &Facts) -> Vec<Chore> {
         let effort = (def.effort)(f);
         let mut g = f.clone();
         let element = (def.apply)(&mut g);
-        let (after, _) = raw_scores(&evaluate(&g));
-        let gain = after.unwrap_or(base) - base;
+        let after = raw_scores(&evaluate(&g)).0.unwrap_or(base);
         // Points are the rounded difference of rounded scores, so the chore list
-        // adds up the way people check it: "41 + 22 = 63".
-        let points = (after.unwrap_or(base).round() - base.round()).max(0.0) as u32;
-        if gain > 1e-9 && points > 0 {
-            out.push(Chore { id: def.id, because, effort, points, element });
+        // adds up the way people check it: "49 + 34 = 83".
+        let points = (after.round() - base.round()).max(0.0) as u32;
+        if points > 0 {
+            out.push(Chore { id: def.id, because, effort, points, element, blocked_by: None });
+            continue;
+        }
+        // Worth nothing right now? Maybe a deal-breaker is holding the score down.
+        // Measure it again as if the binding deal-breakers were already fixed.
+        let binding: Vec<&'static str> = CAP_CHORES
+            .iter()
+            .filter(|(id, rule)| {
+                *id != def.id
+                    && evals.iter().any(|e| e.rule == *rule && matches!(status(e.quality), Status::Bad))
+            })
+            .map(|(id, _)| *id)
+            .collect();
+        if binding.is_empty() {
+            continue;
+        }
+        let g0 = apply_chores(f, &binding);
+        let base0 = raw_scores(&evaluate(&g0)).0.unwrap_or(base);
+        let mut g1 = g0.clone();
+        (def.apply)(&mut g1);
+        let after1 = raw_scores(&evaluate(&g1)).0.unwrap_or(base0);
+        let later = (after1.round() - base0.round()).max(0.0) as u32;
+        if later > 0 {
+            out.push(Chore { id: def.id, because, effort, points: later, element, blocked_by: Some(binding[0]) });
         }
     }
-    out.sort_by(|a, b| b.points.cmp(&a.points).then(a.effort.cmp(&b.effort)).then(a.id.cmp(b.id)));
+    // Unblocked chores first (they move the score today), then by points.
+    out.sort_by(|a, b| {
+        a.blocked_by
+            .is_some()
+            .cmp(&b.blocked_by.is_some())
+            .then(b.points.cmp(&a.points))
+            .then(a.effort.cmp(&b.effort))
+            .then(a.id.cmp(b.id))
+    });
     out
 }
 
@@ -345,11 +381,24 @@ mod tests {
     fn each_chore_alone_raises_the_score_by_its_points() {
         let f = messy_facts();
         let base = raw_scores(&evaluate(&f)).0.unwrap().round() as i64;
-        for c in chores_for(&f) {
+        for c in chores_for(&f).into_iter().filter(|c| c.blocked_by.is_none()) {
             let g = apply_chores(&f, &[c.id]);
             let after = raw_scores(&evaluate(&g)).0.unwrap().round() as i64;
             assert_eq!(after - base, c.points as i64, "chore {}", c.id);
         }
+    }
+
+    #[test]
+    fn chores_behind_a_deal_breaker_say_what_they_wait_for() {
+        let mut f = perfect_facts();
+        f.bed_door = BedDoor::Coffin;
+        f.mirror_facing_bed = TriNa::Yes;
+        let chores = chores_for(&f);
+        assert_eq!(chores[0].id, "move_bed");
+        assert_eq!(chores[0].blocked_by, None);
+        let mirror = chores.iter().find(|c| c.id == "turn_the_mirror").expect("mirror chore");
+        assert_eq!(mirror.blocked_by, Some("move_bed"));
+        assert!(mirror.points > 0);
     }
 
     #[test]

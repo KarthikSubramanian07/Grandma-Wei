@@ -236,8 +236,23 @@ pub fn raw_scores(evals: &[Eval]) -> (Option<f64>, [Option<f64>; 5]) {
             den += p.weight();
         }
     }
-    let overall = if den > 0.0 { Some(num / den) } else { None };
+    let overall = if den > 0.0 { Some((num / den).min(cap(evals))) } else { None };
     (overall, pillars)
+}
+
+/// Deal-breakers. Some problems are serious enough that no amount of nice
+/// lamps can make the room more than "worrying" or "fine" until they're fixed.
+pub fn cap(evals: &[Eval]) -> f64 {
+    let mut cap: f64 = 100.0;
+    for e in evals {
+        match (e.rule, e.quality) {
+            ("bed_door", Some(q)) if q <= 0.0 => cap = cap.min(49.0),
+            ("door_path", Some(q)) if q <= 0.0 => cap = cap.min(59.0),
+            ("clutter", Some(q)) if q <= 0.1 => cap = cap.min(59.0),
+            _ => {}
+        }
+    }
+    cap
 }
 
 pub fn pillar_scores(raw: [Option<f64>; 5]) -> PillarScores {
@@ -318,6 +333,17 @@ mod tests {
         let evals = evaluate(&f);
         assert!(evals.iter().all(|e| !e.rule.starts_with("bed") && e.rule != "under_bed"));
         assert!(evals.iter().any(|e| e.rule == "desk"));
+    }
+
+    #[test]
+    fn a_coffin_bed_caps_an_otherwise_lovely_room() {
+        let mut f = perfect_facts();
+        f.bed_door = BedDoor::Coffin;
+        let (overall, _) = raw_scores(&evaluate(&f));
+        assert!(overall.unwrap() <= 49.0);
+        f.bed_door = BedDoor::Commanding;
+        f.clutter = Clutter::Heavy;
+        assert!(raw_scores(&evaluate(&f)).0.unwrap() <= 59.0);
     }
 
     #[test]
