@@ -17,6 +17,7 @@ export const GRADE: Record<GradeKey, { label: string; asides: string[] }> = {
       "Sit down. I'll make tea. Then we start with the bed.",
       "Don't be sad. We fix one thing at a time, and the first thing is easy.",
       "I've seen rooms come back from worse. Not many. Some.",
+      "I'm not going to cry. You're going to fix it, and then I'll cry.",
     ],
   },
   worrying: {
@@ -25,6 +26,7 @@ export const GRADE: Record<GradeKey, { label: string; asides: string[] }> = {
       "I've seen worse. Not many. Sit down, we're fixing this.",
       "It's not hopeless. It's just very, very busy being wrong.",
       "You have good bones in here. Let's stop hiding them.",
+      "I came to visit. Now I'm staying until the bed moves.",
     ],
   },
   fine: {
@@ -33,6 +35,7 @@ export const GRADE: Record<GradeKey, { label: string; asides: string[] }> = {
       "Fine is not a compliment. But it's a start.",
       "Halfway there. The second half is the fun part. For me.",
       "Not bad. Not good. Let's go for good.",
+      "Fine is what people say about soup they didn't like.",
     ],
   },
   acceptable: {
@@ -41,6 +44,7 @@ export const GRADE: Record<GradeKey, { label: string; asides: string[] }> = {
       "You're close. I can almost relax.",
       "Good. A few things, and then I stop talking. Maybe.",
       "Someone has been listening. Keep going.",
+      "If your mother saw this, she would only sigh once.",
     ],
   },
   lovely: {
@@ -49,6 +53,7 @@ export const GRADE: Record<GradeKey, { label: string; asides: string[] }> = {
       "Lovely. Don't let it go to your head.",
       "Very nice. I'm only saying it once.",
       "This room is looking after you. Look after it back.",
+      "Lovely. I'll still check under the bed. Habit.",
     ],
   },
   id_sleep_here: {
@@ -57,6 +62,7 @@ export const GRADE: Record<GradeKey, { label: string; asides: string[] }> = {
       "I'd sleep here. I won't, but I would.",
       "I have nothing to say. Write that down. It won't happen again.",
       "Perfect. Now call your mother and tell her I said so.",
+      "I'd sleep here. Bring me a blanket.",
     ],
   },
 };
@@ -68,10 +74,12 @@ export const HEADLINES: Record<RuleId, Record<string, string[]>> = {
       "Your bed is in the coffin position. I'm not angry. I'm worried.",
       "Feet pointing straight out the door. That's how they carry you out. Move the bed.",
       "You sleep in the coffin position. I didn't sleep at all after seeing it.",
+      "Your bed is pointed at the door like it's waiting for a ride. It's not going anywhere. Move it.",
     ],
     no_view: [
       "You can't see the door from your bed. Anyone could walk in. Even me.",
       "You sleep with your back to the door. Who taught you this? Not me.",
+      "From your pillow you can't see who's coming in. I could be standing there right now.",
     ],
     in_line_head: [
       "The door opens right at your head. Every time it opens, your pillow knows.",
@@ -98,6 +106,7 @@ export const HEADLINES: Record<RuleId, Record<string, string[]>> = {
     back_to_door: [
       "You work with your back to the door. Every footstep is a jump scare.",
       "Your back is to the door while you work. No wonder you check your phone so much.",
+      "Back to the door at your desk. Anyone could sneak up on you. Me, for example.",
     ],
     facing_wall: [
       "Your desk faces a wall. You're not in trouble. Turn around.",
@@ -125,16 +134,19 @@ export const HEADLINES: Record<RuleId, Record<string, string[]>> = {
       "I can see the floor in three places. I counted.",
       "This isn't clutter. This is a second room inside your room.",
       "So many things. Each one wants your attention. No wonder you're tired.",
+      "Somewhere under all this, there's a floor. I believe in it.",
     ],
     some: [
       "It's not a mess. It's piles. Piles become messes. I've seen it happen.",
       "A little clutter here, a little there. It adds up. I'm adding it up.",
+      "Every chair in here is also a closet.",
     ],
   },
   under_bed: {
     cluttered: [
       "There are things under your bed. I know. I can feel them.",
       "You're sleeping on top of storage. Your dreams are full of boxes.",
+      "I'm not going to ask what's under the bed. I'm just going to wait.",
     ],
     tidy_storage: [
       "Tidy boxes under the bed. Tidy is better than messy. Empty is better than tidy.",
@@ -150,12 +162,14 @@ export const HEADLINES: Record<RuleId, Record<string, string[]>> = {
     yes: [
       "There's a mirror watching you sleep. I'm watching the mirror.",
       "Your mirror faces the bed. Nobody needs to see themselves at 4 a.m.",
+      "A mirror facing the bed. You wake up at 3 a.m. and there are two of you. Nobody needs that.",
     ],
   },
   over_bed: {
     yes: [
       "Something heavy is hanging over your bed. Don't sleep under things.",
       "A beam over the bed. You'll feel it pressing on you even if you don't know why.",
+      "Something heavy over your head while you sleep. Even in cartoons that ends badly.",
     ],
   },
   electronics_near_bed: {
@@ -166,6 +180,7 @@ export const HEADLINES: Record<RuleId, Record<string, string[]>> = {
     some: [
       "Your phone sleeps closer to you than anyone. Put it across the room.",
       "A screen by the pillow. It will win every argument with your sleep.",
+      "Your phone gets the best spot on the nightstand. What does it pay in rent?",
     ],
   },
   bed_access: {
@@ -177,12 +192,14 @@ export const HEADLINES: Record<RuleId, Record<string, string[]>> = {
     yes: [
       "That corner is pointing right at you. It's rude.",
       "Sharp corner aimed where you sit. It's not personal. It's still rude.",
+      "That corner has been pointing at you for months. Point back. Or move it.",
     ],
   },
   natural_light: {
     dim: [
       "It's so dark in here. Open something. A curtain. A window. Your heart.",
       "Where's the daylight? Your plants are asking. You don't have plants. That's why.",
+      "It's so dark in here I'm reading the room with my hands.",
     ],
     some: ["Some daylight gets in. Let more in. It's free."],
   },
@@ -190,6 +207,7 @@ export const HEADLINES: Record<RuleId, Record<string, string[]>> = {
     single_overhead: [
       "One light on the ceiling, like an interrogation. Get a lamp.",
       "A single overhead light. Very bright, very flat, very hospital.",
+      "One ceiling light doing all the work. You live in a dentist's office.",
     ],
     harsh: [
       "This light is so harsh I can see my own mistakes.",
@@ -203,13 +221,15 @@ export const HEADLINES: Record<RuleId, Record<string, string[]>> = {
     ],
     artificial: [
       "A plastic plant. It doesn't need water. It doesn't need you. Get a real one.",
+      "A fake plant. Even the plant is pretending.",
     ],
-    none: ["Nothing alive in here but you. And I'm checking on you."],
+    none: ["Nothing alive in here but you. And I'm checking on you.", "Not one living thing in here. Except the dust. The dust is thriving."],
   },
   elements: {
     poor: [
       "Everything in here is the same. Same color, same material. Even the qi is bored.",
       "No variety. A room needs a little wood, a little metal, a little warmth. Like a soup.",
+      "Everything matches. It's not a room, it's a filing cabinet.",
     ],
   },
 };
@@ -218,6 +238,7 @@ export const HEADLINES: Record<RuleId, Record<string, string[]>> = {
 export const NO_HEADLINE = [
   "I have nothing to say. Write that down. It won't happen again.",
   "I looked everywhere. I found nothing. I'm a little disappointed, honestly.",
+  "I came all this way to complain and you've ruined it.",
 ];
 
 export const CHORES: Record<ChoreId, string> = {
@@ -280,23 +301,23 @@ export const WHY: Record<RuleId, string> = {
 
 /** Short sticky notes, in her handwriting. Keyed by rule and state. */
 export const NOTES: Record<string, string[]> = {
-  "bed_door:coffin": ["coffin position. move it.", "feet at the door?!"],
+  "bed_door:coffin": ["coffin position. move it.", "feet at the door?!", "not the coffin. please."],
   "bed_door:no_view": ["can't see the door"],
   "bed_door:in_line_head": ["door at your head"],
   "bed_door:commanding": ["good bed."],
   "headboard:window": ["not under the window"],
   "headboard:floating": ["give it a wall"],
-  "mirror_facing_bed:yes": ["no.", "turn me around"],
-  "under_bed:cluttered": ["what is under there", "I know what you did"],
-  "clutter:heavy": ["this. all of this.", "where is the floor"],
+  "mirror_facing_bed:yes": ["no.", "turn me around", "who watches who?"],
+  "under_bed:cluttered": ["what is under there", "I know what you did", "I see you, boxes"],
+  "clutter:heavy": ["this. all of this.", "where is the floor", "a floor was here once"],
   "clutter:some": ["piles."],
   "desk:back_to_door": ["back to the door?"],
-  "desk:facing_wall": ["turn around"],
+  "desk:facing_wall": ["turn around", "the wall has no ideas"],
   "desk:commanding": ["good desk."],
   "electronics_near_bed:lots": ["so many chargers"],
-  "electronics_near_bed:some": ["phone. across the room."],
+  "electronics_near_bed:some": ["phone. across the room.", "phone sleeps elsewhere"],
   "plants:struggling": ["water me", "help"],
-  "plants:artificial": ["plastic. really?"],
+  "plants:artificial": ["plastic. really?", "it is plastic, dear"],
   "plants:healthy": ["good. water it."],
   "sharp_corners:yes": ["pointing at you"],
   "door_path:blocked": ["let me in"],
@@ -322,6 +343,7 @@ export const STATES = {
     "That's not a room. I'm old, not blind.",
     "I read rooms. Not this. Show me where you sleep.",
     "Very nice. Now show me a room.",
+    "Lovely photo. Not a room. I only do rooms.",
   ],
   need_better_photo: [
     "I can't see enough to judge. Step back into a corner and get the whole room in.",
@@ -333,11 +355,11 @@ export const STATES = {
 
 export const RETAKE = {
   different_room: ["That's a different room. Nice try.", "That's not the same room. I'll read it, but I noticed."],
-  big: ["Look at that. I'm telling your mother.", "Is this the same room? I'm so proud I could cry. I won't."],
-  medium: ["Better. I noticed. Don't stop now.", "Good. You listened. Keep listening."],
+  big: ["Look at that. I'm telling your mother.", "Is this the same room? I'm so proud I could cry. I won't.", "I'm putting this on the fridge. Next to your diploma."],
+  medium: ["Better. I noticed. Don't stop now.", "Good. You listened. Keep listening.", "Better. I'll stop sighing. For now."],
   small: ["A little better. A little is still better.", "Small steps. I'll allow it."],
-  same: ["Same as before. Did you just take the photo again?", "Nothing changed. I can wait. I have time."],
-  worse: ["Worse. What happened? Tell me what happened.", "Lower than before. I'm not mad. I'm going to sit down."],
+  same: ["Same as before. Did you just take the photo again?", "Nothing changed. I can wait. I have time.", "Same room, same score, same grandmother waiting."],
+  worse: ["Worse. What happened? Tell me what happened.", "Lower than before. I'm not mad. I'm going to sit down.", "It went down. Did someone help you? Who helped you?"],
 } as const;
 
 export const MAGNETS: Record<MagnetId, { name: string; blurb: string }> = {
