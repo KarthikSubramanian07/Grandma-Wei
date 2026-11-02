@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grandma Wei · scorecard concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=Geist+Mono:wght@400;500&family=Kalam:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #F3EDE2;
+    --paper-2: #EBE3D4;
+    --ink: #1E1A16;
+    --ink-soft: #5A5148;
+    --muted: #8C8173;
+    --seal: #C23A22;
+    --jade: #2E6A58;
+    --brass: #B4873A;
+    --line: #D9CFBE;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { background: #14110F; }
+  body {
+    font-family: "Newsreader", Georgia, serif;
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    padding: 40px 20px 60px;
+  }
+  .table {
+    width: min(1120px, 100%);
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .table { grid-template-columns: 1fr; } }
+
+  /* paper with grain */
+  .paper {
+    position: relative;
+    background: var(--paper);
+    border-radius: 3px;
+    box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 30px 60px -20px rgba(0,0,0,.6), 0 2px 6px rgba(0,0,0,.4);
+    overflow: hidden;
+  }
+  .paper::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: multiply; opacity: .55;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .48  0 0 0 0 .38  0 0 0 .18 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .mono { font-family: "Geist Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .hand { font-family: "Kalam", cursive; }
+
+  /* ---------- scorecard ---------- */
+  .card { padding: 34px 38px 30px; transform: rotate(-.6deg); }
+  .card header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+  .brand { font-size: 22px; font-weight: 500; letter-spacing: -.01em; }
+  .brand em { font-style: italic; font-weight: 400; }
+
+  .hero { display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: center; padding: 26px 0 18px; }
+  .score { font-size: 132px; line-height: .8; font-weight: 300; letter-spacing: -.05em; font-variant-numeric: tabular-nums; font-optical-sizing: auto; }
+  .score small { font-size: 22px; letter-spacing: 0; color: var(--muted); font-weight: 400; margin-left: 4px; }
+  .grade { font-style: italic; font-size: 30px; line-height: 1.05; }
+  .grade .mono { display: block; font-style: normal; margin-bottom: 6px; }
+
+  .seal { width: 96px; height: 96px; transform: rotate(8deg); filter: url(#bleed); transition: transform .2s; }
+  .seal.stamp { animation: stamp .55s cubic-bezier(.2,1.6,.4,1) both; }
+  @keyframes stamp { 0% { transform: scale(2.4) rotate(-6deg); opacity: 0; } 55% { opacity: 1; } 100% { transform: scale(1) rotate(8deg); } }
+
+  .verdict { position: relative; font-size: 27px; line-height: 1.22; padding: 18px 0 22px 26px; border-left: 2px solid var(--seal); margin: 4px 0 22px; }
+  .verdict .who { display: block; margin-top: 10px; }
+
+  .pillars { display: grid; gap: 10px; margin-bottom: 24px; }
+  .pillar { display: grid; grid-template-columns: 82px 1fr 34px; gap: 14px; align-items: center; }
+  .pillar .mono { color: var(--ink-soft); }
+  .pillar .val { font-family: "Geist Mono", monospace; font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+  .stroke { height: 16px; position: relative; }
+  .stroke svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .stroke .track { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
+  .stroke .ink { transition: clip-path 1.1s cubic-bezier(.3,.8,.2,1); }
+
+  .chores h3 { font-weight: 500; font-size: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+  .chore { display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); align-items: start; }
+  .chore:last-child { border-bottom: 1px solid var(--line); }
+  .box { width: 16px; height: 16px; border: 1.5px solid var(--ink); border-radius: 2px; margin-top: 3px; position: relative; }
+  .chore.done .box::after { content: ""; position: absolute; left: -3px; top: -7px; width: 20px; height: 18px;
+    background: no-repeat center/contain url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 18'><path d='M2 9 C5 11 6 14 8 16 C11 10 14 5 19 1' fill='none' stroke='%232E6A58' stroke-width='2.6' stroke-linecap='round'/></svg>"); }
+  .chore.done .what { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(30,26,22,.35); }
+  .what { font-size: 17px; line-height: 1.3; }
+  .what .mono { display: block; margin-top: 4px; letter-spacing: .04em; }
+  .pts { font-family: "Geist Mono", monospace; font-size: 13px; color: var(--jade); white-space: nowrap; }
+
+  .card footer { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; }
+  .btn {
+    font: 500 16px "Newsreader", serif; color: var(--paper); background: var(--ink); border: 0; border-radius: 999px;
+    padding: 12px 22px 12px 20px; cursor: pointer; display: inline-flex; gap: 10px; align-items: center;
+    box-shadow: 0 1px 0 rgba(255,255,255,.15) inset, 0 6px 14px -6px rgba(0,0,0,.5); transition: transform .15s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(1px); }
+  .btn .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--seal); }
+
+  /* ---------- right column ---------- */
+  .right { display: grid; gap: 22px; }
+  .plan { padding: 18px 18px 14px; transform: rotate(.5deg); }
+  .plan .top { display: flex; justify-content: space-between; margin-bottom: 10px; }
+  .stage { position: relative; aspect-ratio: 5 / 4; }
+  .stage svg, .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .stage canvas { mix-blend-mode: multiply; }
+  .furn { transition: transform 1.2s cubic-bezier(.5,0,.2,1), opacity .8s; }
+  .note { position: absolute; font-family: "Kalam", cursive; font-size: 15px; line-height: 1.05; color: var(--seal);
+    background: #FBF3C9; padding: 6px 9px 7px; box-shadow: 0 6px 10px -6px rgba(0,0,0,.45); transition: opacity .5s, transform .5s; }
+  .note.gone { opacity: 0; transform: translateY(-8px) rotate(0deg) !important; }
+  .legend { display: flex; gap: 16px; margin-top: 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 2px; background: var(--ink); display: inline-block; }
+
+  .grandma { display: grid; grid-template-columns: 112px 1fr; gap: 18px; padding: 18px 22px; align-items: center; background: var(--paper-2); }
+  .grandma svg { width: 112px; height: 112px; }
+  .grandma p { font-size: 19px; line-height: 1.3; font-style: italic; }
+  .grandma .mono { margin-bottom: 6px; }
+  .face path, .face circle { transition: d .5s, transform .5s; }
+
+  .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--paper-2); }
+  .toggle button { font: 500 11px "Geist Mono", monospace; letter-spacing: .08em; text-transform: uppercase; border: 0; background: none; padding: 6px 12px; border-radius: 999px; color: var(--muted); cursor: pointer; }
+  .toggle button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+
+  .caption { color: #8C8173; font: 12px "Geist Mono", monospace; margin-top: 26px; text-align: center; letter-spacing: .04em; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <filter id="bleed"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="3.2"/></filter>
+  <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".02 .08" numOctaves="2" seed="4" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="2.2"/></filter>
+</svg>
+
+<main class="table">
+  <!-- ============ SCORECARD ============ -->
+  <article class="paper card" aria-label="Grandma Wei scorecard">
+    <header>
+      <div class="brand">Grandma <em>Wei</em></div>
+      <div class="mono">Reading Nº 0417 · Bedroom</div>
+    </header>
+
+    <section class="hero">
+      <div class="score" aria-live="polite"><span id="score">41</span><small>/100</small></div>
+      <div class="grade"><span class="mono">Her grade</span><span id="grade">Worrying.</span></div>
+      <svg id="seal" class="seal" viewBox="0 0 100 100" aria-hidden="true">
+        <rect x="6" y="6" width="88" height="88" rx="7" fill="#C23A22"/>
+        <rect x="13" y="13" width="74" height="74" rx="3" fill="none" stroke="#F3EDE2" stroke-width="2.5"/>
+        <text x="50" y="66" text-anchor="middle" font-size="46" fill="#F3EDE2" font-family="'Songti SC','Noto Serif SC','STSong',serif" font-weight="700">魏</text>
+      </svg>
+    </section>
+
+    <blockquote class="verdict">
+      <span id="verdict">Your bed is in the coffin position. I'm not angry. I'm worried.</span>
+      <span class="who mono">— Grandma Wei</span>
+    </blockquote>
+
+    <section class="pillars" id="pillars"></section>
+
+    <section class="chores">
+      <h3><span>Your chores</span><span class="mono" id="potential">+37 possible</span></h3>
+      <div class="chore" data-i="0"><div class="box"></div><div class="what">Turn the bed so the headboard sits on the left wall, facing the door at an angle.<span class="mono">A weekend · Command</span></div><div class="pts">+22</div></div>
+      <div class="chore" data-i="1"><div class="box"></div><div class="what">Everything under the bed. Out. Yes, that too.<span class="mono">20 minutes · Flow</span></div><div class="pts">+9</div></div>
+      <div class="chore" data-i="2"><div class="box"></div><div class="what">The mirror is watching you sleep. Turn it to the wall.<span class="mono">2 minutes · Rest</span></div><div class="pts">+6</div></div>
+    </section>
+
+    <footer>
+      <span class="mono">grandma-wei.pages.dev</span>
+      <button class="btn" id="again"><span class="dot"></span><span id="againLabel">I did my chores. Show her again.</span></button>
+    </footer>
+  </article>
+
+  <!-- ============ RIGHT: the room + grandma ============ -->
+  <div class="right">
+    <section class="paper plan">
+      <div class="top">
+        <span class="mono">How the qi moves</span>
+        <div class="toggle" role="group" aria-label="Before or after">
+          <button id="tBefore" aria-pressed="true">Before</button>
+          <button id="tAfter" aria-pressed="false">After</button>
+        </div>
+      </div>
+      <div class="stage" id="stage">
+        <svg viewBox="0 0 500 400" id="room" aria-hidden="true">
+          <g filter="url(#rough)" fill="none" stroke="#1E1A16" stroke-width="2.4" stroke-linecap="round">
+            <!-- walls, with a gap for the door (bottom) and window (top) -->
+            <path d="M30 30 H200 M300 30 H470 V370 H290 M210 370 H30 V30"/>
+          </g>
+          <!-- window -->
+          <g stroke="#2E6A58" stroke-width="2"><path d="M200 26 H300 M200 34 H300"/></g>
+          <text x="250" y="20" text-anchor="middle" font-family="Geist Mono" font-size="10" fill="#8C8173" letter-spacing="1">WINDOW</text>
+          <!-- door swing -->
+          <g stroke="#1E1A16" stroke-width="1.6" fill="none"><path d="M210 370 L210 290"/><path d="M210 290 A80 80 0 0 1 290 370" stroke-dasharray="3 4"/></g>
+          <text x="250" y="392" text-anchor="middle" font-family="Geist Mono" font-size="10" fill="#8C8173" letter-spacing="1">DOOR</text>
+
+          <!-- bed -->
+          <g id="bed" class="furn" style="transform-origin:250px 150px">
+            <rect x="190" y="60" width="120" height="170" rx="6" fill="#EBE3D4" stroke="#1E1A16" stroke-width="2"/>
+            <rect x="198" y="68" width="48" height="28" rx="6" fill="#F3EDE2" stroke="#1E1A16" stroke-width="1.4"/>
+            <rect x="254" y="68" width="48" height="28" rx="6" fill="#F3EDE2" stroke="#1E1A16" stroke-width="1.4"/>
+            <path d="M190 120 H310" stroke="#1E1A16" stroke-width="1.2"/>
+          </g>
+          <!-- mirror on right wall -->
+          <g id="mirror" class="furn" style="transform-origin:462px 150px">
+            <rect x="456" y="110" width="9" height="80" fill="#C9D8D2" stroke="#1E1A16" stroke-width="1.6"/>
+          </g>
+          <!-- clutter pile -->
+          <g id="clutter" class="furn">
+            <rect x="320" y="250" width="40" height="30" rx="3" fill="#EBE3D4" stroke="#1E1A16" stroke-width="1.6" transform="rotate(-8 340 265)"/>
+            <rect x="345" y="262" width="34" height="26" rx="3" fill="#EBE3D4" stroke="#1E1A16" stroke-width="1.6" transform="rotate(12 362 275)"/>
+            <circle cx="330" cy="292" r="10" fill="#EBE3D4" stroke="#1E1A16" stroke-width="1.6"/>
+          </g>
+          <!-- desk with sharp corner -->
+          <g id="desk" class="furn">
+            <rect x="48" y="210" width="70" height="120" fill="#EBE3D4" stroke="#1E1A16" stroke-width="1.8"/>
+          </g>
+          <!-- plant -->
+          <g id="plant" class="furn" style="opacity:0">
+            <circle cx="440" cy="340" r="16" fill="#2E6A58" opacity=".85"/><circle cx="430" cy="330" r="9" fill="#2E6A58"/><circle cx="452" cy="328" r="8" fill="#2E6A58"/>
+          </g>
+        </svg>
+        <canvas id="qi"></canvas>
+        <div class="note" id="n1" style="left:44%; top:60%; transform:rotate(-3deg)">coffin position.<br/>move it.</div>
+        <div class="note" id="n2" style="left:74%; top:24%; transform:rotate(4deg)">no.</div>
+        <div class="note" id="n3" style="left:58%; top:76%; transform:rotate(-5deg)">what is<br/>under there</div>
+      </div>
+      <div class="legend mono">
+        <span><i></i>qi from the door</span>
+        <span><i style="background:#C23A22"></i>stuck</span>
+      </div>
+    </section>
+
+    <section class="paper grandma">
+      <svg viewBox="0 0 120 120" class="face" aria-label="Grandma Wei">
+        <g fill="none" stroke="#1E1A16" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#bleed)">
+          <!-- hair: short soft perm -->
+          <path d="M30 52 C24 30 42 14 60 15 C80 14 97 28 92 52" fill="#D9D3CB"/>
+          <path d="M32 40 C36 34 42 34 44 39 C47 31 55 30 58 36 C61 29 70 30 72 36 C76 30 85 33 86 41"/>
+          <!-- face -->
+          <path d="M34 50 C33 76 45 92 60 92 C76 92 87 76 86 50" fill="#F3EDE2"/>
+          <!-- glasses -->
+          <circle cx="48" cy="60" r="10"/><circle cx="72" cy="60" r="10"/><path d="M58 60 H62"/>
+          <!-- glasses chain -->
+          <path d="M38 62 C30 80 34 100 46 112 M82 62 C90 80 86 100 74 112" stroke-width="1.2" stroke-dasharray="1 3.5"/>
+          <!-- brows -->
+          <path id="browL" d="M40 46 L55 47"/>
+          <path id="browR" d="M65 47 L80 46"/>
+          <!-- eyes -->
+          <path d="M45 61 H51 M69 61 H75"/>
+          <!-- mouth -->
+          <path id="mouth" d="M52 79 C56 77 64 77 68 79"/>
+          <!-- cardigan -->
+          <path d="M30 120 C30 104 44 96 60 96 C76 96 90 104 90 120" fill="#B4873A" fill-opacity=".35"/>
+          <path d="M60 96 V120"/>
+        </g>
+      </svg>
+      <div>
+        <div class="mono" id="mood">Mood · concerned</div>
+        <p id="aside">I've seen worse. Not many. Sit down, I'll make tea, and then we're moving that bed.</p>
+      </div>
+    </section>
+  </div>
+</main>
+<p class="caption">Concept only · plan, scorecard, and qi-flow mechanic · press "Show her again"</p>
+
+<script>
+const states = {
+  before: {
+    score: 41, grade: "Worrying.",
+    verdict: "Your bed is in the coffin position. I'm not angry. I'm worried.",
+    pillars: { Command: 18, Flow: 52, Rest: 40, Light: 71, Balance: 46 },
+    mood: "Mood · concerned",
+    aside: "I've seen worse. Not many. Sit down, I'll make tea, and then we're moving that bed.",
+    mouth: "M52 79 C56 77 64 77 68 79", browL: "M40 46 L55 47", browR: "M65 47 L80 46",
+  },
+  after: {
+    score: 78, grade: "Acceptable.",
+    verdict: "You moved the bed. You cleared the floor. I'm telling your mother.",
+    pillars: { Command: 86, Flow: 81, Rest: 74, Light: 71, Balance: 63 },
+    mood: "Mood · proud (don't tell anyone)",
+    aside: "Better. Now a plant by the window, a real one, and water it. I will check.",
+    mouth: "M50 77 C55 83 65 83 70 77", browL: "M40 44 C45 42 51 42 55 44", browR: "M65 44 C69 42 75 42 80 44",
+  },
+};
+
+// brush stroke bars
+const pillarsEl = document.getElementById("pillars");
+const brush = "M2 9 C 20 4, 60 12, 100 7 S 180 4, 240 8 S 330 12, 398 6 L 398 12 C 340 16, 280 13, 220 15 S 90 17, 40 14 S 6 15, 2 13 Z";
+Object.keys(states.before.pillars).forEach((k, i) => {
+  const row = document.createElement("div");
+  row.className = "pillar";
+  row.innerHTML = `<span class="mono">${k}</span>
+    <div class="stroke"><svg viewBox="0 0 400 20" preserveAspectRatio="none">
+      <line class="track" x1="0" y1="10" x2="400" y2="10"/>
+      <path class="ink" id="ink${i}" d="${brush}" fill="${['#C23A22','#1E1A16','#1E1A16','#2E6A58','#B4873A'][i]}" filter="url(#bleed)"/>
+    </svg></div><span class="val" id="val${i}">0</span>`;
+  pillarsEl.appendChild(row);
+});
+
+let current = "before";
+function roll(el, from, to, ms = 1100) {
+  const t0 = performance.now();
+  const step = (t) => {
+    const p = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (to - from) * e);
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function apply(name, animate = true) {
+  const prev = states[current], s = states[name];
+  current = name;
+  roll(document.getElementById("score"), animate ? prev.score : 0, s.score);
+  document.getElementById("grade").textContent = s.grade;
+  document.getElementById("verdict").textContent = s.verdict;
+  document.getElementById("mood").textContent = s.mood;
+  document.getElementById("aside").textContent = s.aside;
+  document.getElementById("mouth").setAttribute("d", s.mouth);
+  document.getElementById("browL").setAttribute("d", s.browL);
+  document.getElementById("browR").setAttribute("d", s.browR);
+  Object.values(s.pillars).forEach((v, i) => {
+    document.getElementById("ink" + i).style.clipPath = `inset(0 ${100 - v}% 0 0)`;
+    roll(document.getElementById("val" + i), animate ? Object.values(prev.pillars)[i] : 0, v);
+  });
+  const after = name === "after";
+  document.querySelectorAll(".chore").forEach((c) => c.classList.toggle("done", after));
+  document.getElementById("potential").textContent = after ? "+9 left: get a plant" : "+37 possible";
+  document.getElementById("againLabel").textContent = after ? "Show me the before again" : "I did my chores. Show her again.";
+  ["n1", "n2", "n3"].forEach((id) => document.getElementById(id).classList.toggle("gone", after));
+  // room changes
+  document.getElementById("bed").style.transform = after ? "translate(95px, 25px) rotate(90deg)" : "";
+  document.getElementById("mirror").style.transform = after ? "translate(-240px, -60px) rotate(90deg)" : "";
+  document.getElementById("clutter").style.opacity = after ? 0 : 1;
+  document.getElementById("plant").style.opacity = after ? .9 : 0;
+  document.getElementById("tBefore").setAttribute("aria-pressed", !after);
+  document.getElementById("tAfter").setAttribute("aria-pressed", after);
+  const seal = document.getElementById("seal");
+  seal.classList.remove("stamp"); void seal.getBBox(); seal.classList.add("stamp");
+}
+document.getElementById("again").onclick = () => apply(current === "before" ? "after" : "before");
+document.getElementById("tBefore").onclick = () => current !== "before" && apply("before");
+document.getElementById("tAfter").onclick = () => current !== "after" && apply("after");
+
+// ---------- qi particles (the real thing will run this in Rust/WASM + WebGL2) ----------
+const cv = document.getElementById("qi"), ctx = cv.getContext("2d");
+const W = 500, H = 400;
+let dpr = 1;
+function resize() {
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  const r = cv.getBoundingClientRect();
+  cv.width = r.width * dpr; cv.height = r.height * dpr;
+  ctx.setTransform(r.width * dpr / W, 0, 0, r.height * dpr / H, 0, 0);
+}
+resize(); addEventListener("resize", resize);
+
+// obstacles in room coordinates for each state
+const rooms = {
+  before: {
+    solids: [[190, 60, 310, 230], [48, 210, 118, 330]],
+    stagnant: [[300, 230, 400, 310], [190, 228, 310, 300]], // clutter + foot of bed in line with door
+  },
+  after: {
+    solids: [[285, 50, 455, 170], [48, 210, 118, 330]],
+    stagnant: [],
+  },
+};
+const N = 520;
+const P = Array.from({ length: N }, () => spawn({}));
+function spawn(p) {
+  p.x = 215 + Math.random() * 70; p.y = 368 + Math.random() * 10;
+  p.age = 0; p.life = 260 + Math.random() * 260; p.stuck = 0;
+  p.px = p.x; p.py = p.y; p.j = Math.random() * 6.28;
+  return p;
+}
+function inside(r, x, y, pad = 0) { return x > r[0] - pad && x < r[2] + pad && y > r[1] - pad && y < r[3] + pad; }
+let t = 0;
+function frame() {
+  t += 1;
+  const room = rooms[current];
+  ctx.clearRect(0, 0, W, H);
+  for (const p of P) {
+    // pull toward window, with curl noise wandering
+    let dx = 250 - p.x, dy = 20 - p.y;
+    const d = Math.hypot(dx, dy) + 1e-3; dx /= d; dy /= d;
+    const n = Math.sin(p.y * .03 + t * .01 + p.j) * .9, m = Math.cos(p.x * .028 - t * .012 + p.j) * .9;
+    let vx = dx * .9 + n * .7, vy = dy * .9 + m * .5;
+    // repel from solids
+    for (const r of room.solids) {
+      const cx = Math.max(r[0], Math.min(p.x, r[2])), cy = Math.max(r[1], Math.min(p.y, r[3]));
+      let ox = p.x - cx, oy = p.y - cy; const od = Math.hypot(ox, oy);
+      if (od < 26) { const f = (26 - od) / 26 * 2.6; vx += (ox / (od || 1)) * f; vy += (oy / (od || 1)) * f; }
+      if (od === 0) { vx += (p.x - (r[0] + r[2]) / 2) * .05; vy += 1.5; }
+    }
+    // walls
+    if (p.x < 40) vx += .8; if (p.x > 460) vx -= .8; if (p.y < 40 && Math.abs(p.x - 250) > 50) vy += .9;
+    // stagnation: qi slows and swirls
+    let slow = 1; p.stuck = Math.max(0, p.stuck - .02);
+    for (const r of room.stagnant) if (inside(r, p.x, p.y)) { slow = .12; p.stuck = Math.min(1, p.stuck + .05); vx += Math.sin(t * .05 + p.j) * .8; vy += Math.cos(t * .05 + p.j) * .8; }
+    const sp = Math.hypot(vx, vy) || 1, speed = 1.15 * slow;
+    p.px = p.x; p.py = p.y;
+    p.x += vx / sp * speed; p.y += vy / sp * speed; p.age++;
+    const a = Math.sin(Math.PI * Math.min(1, p.age / p.life)) * .55;
+    ctx.strokeStyle = p.stuck > .3 ? `rgba(194,58,34,${a})` : `rgba(30,26,22,${a * .8})`;
+    ctx.lineWidth = p.stuck > .3 ? 1.6 : 1.1;
+    ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x + (p.x - p.px) * 3, p.y + (p.y - p.py) * 3); ctx.stroke();
+    if (p.age > p.life || p.y < 18 || p.x < 20 || p.x > 480) spawn(p);
+  }
+  requestAnimationFrame(frame);
+}
+if (!matchMedia("(prefers-reduced-motion: reduce)").matches) frame();
+
+apply("before", false);
+</script>
+</body>
+</html>
