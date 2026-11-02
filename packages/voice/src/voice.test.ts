@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Reading, Scene } from "@gw/schema";
+import type { Diff, Reading, Scene } from "@gw/schema";
 import { PILLARS } from "@gw/schema";
 import * as lines from "./lines";
 import { compose, lint, mergeVoice, retakeLine } from "./index";
@@ -108,7 +108,7 @@ describe("compose", () => {
 
 describe("retake", () => {
   test("big improvement gets pride, regression gets noticed", () => {
-    const base = { before: 40, after: 70, improved: [], worsened: [], magnets: [], different_room: false } as const;
+    const base: Omit<Diff, "delta"> = { before: 40, after: 70, improved: [], worsened: [], magnets: [], different_room: false };
     expect(lines.RETAKE.big).toContain(retakeLine({ ...base, delta: 30 }, "s") as never);
     expect(retakeLine({ ...base, delta: 2, worsened: ["clutter"] }, "s")).toContain("clutter got worse");
     expect(lines.RETAKE.different_room).toContain(retakeLine({ ...base, delta: 0, different_room: true }, "s") as never);

@@ -8,13 +8,14 @@
     "qi": "cd crates/qi && CARGO_BUILD_JOBS=2 wasm-pack build --release --target web --scope gw --out-dir ../../packages/qi --out-name qi -- --features wasm && rm -f ../../packages/qi/.gitignore",
     "test": "bun run test:rust && bun test",
     "test:rust": "cd crates/qi && CARGO_BUILD_JOBS=2 cargo test --quiet",
-    "typecheck": "tsc -b",
+    "typecheck": "tsc -p tsconfig.json",
     "dev": "bun run --cwd apps/web dev",
     "build": "bun run qi && bun run --cwd apps/web build",
     "e2e": "bun run --cwd apps/web e2e"
   },
   "devDependencies": {
-    "typescript": "^5.9.0",
-    "@types/bun": "latest"
+    "@cloudflare/workers-types": "^5.20261102.1",
+    "@types/bun": "latest",
+    "typescript": "^5.9.0"
   }
 }
