@@ -45,7 +45,8 @@ No photo handy? Three practice rooms work with no setup at all.
 ## Architecture
 
 ```mermaid
-flowchart LR
+%%{init: {'theme': 'neutral'}}%%
+flowchart TB
   subgraph Browser["Your browser"]
     direction TB
     Photo["Photo<br/>resized + re-encoded<br/>(location data stripped)"]
@@ -82,6 +83,7 @@ flowchart LR
 ### One reading, step by step
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 sequenceDiagram
   autonumber
   actor You
@@ -110,6 +112,7 @@ sequenceDiagram
 ### The loop
 
 ```mermaid
+%%{init: {'theme': 'neutral'}}%%
 flowchart LR
   A["Show her<br/>a photo"] --> B["Her verdict<br/>score + notes + chores"]
   B --> C["Tick chores<br/>see the new score"]
