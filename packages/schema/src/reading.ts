@@ -77,6 +77,8 @@ export interface Chore {
   effort: Effort;
   points: number;
   element: "wood" | "fire" | "earth" | "metal" | "water" | null;
+  /** Set when a deal-breaker holds the score down: the points count once that chore is done. */
+  blocked_by: ChoreId | null;
 }
 
 export interface Reading {

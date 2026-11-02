@@ -100,25 +100,33 @@ pub fn solve(scene: &Scene, w: usize, h: usize, iterations: usize) -> Field {
     }
 
     let door = layout.door;
+    let opposite = |w: Wall| match w {
+        Wall::Near => Wall::Far,
+        Wall::Far => Wall::Near,
+        Wall::Left => Wall::Right,
+        Wall::Right => Wall::Left,
+    };
     let mut sources = vec![];
-    if let Some(d) = door {
-        sources = opening_cells(d.wall, d.at, 0.16, w, h);
-    }
     let mut sinks = vec![];
-    for win in &layout.windows {
-        sinks.extend(opening_cells(win.wall, win.at, win.size.max(0.1), w, h));
-    }
-    // A room with no visible window still breathes somewhere: let qi settle at
-    // the wall farthest from the door, weakly.
-    let weak_sink = sinks.is_empty();
-    if weak_sink {
-        let far = match door.map(|d| d.wall) {
-            Some(Wall::Near) | None => Wall::Far,
-            Some(Wall::Far) => Wall::Near,
-            Some(Wall::Left) => Wall::Right,
-            Some(Wall::Right) => Wall::Left,
-        };
-        sinks = opening_cells(far, 0.5, 0.3, w, h);
+    let mut weak_sink = false;
+    if let Some(d) = door {
+        // The usual case: qi enters at the door and leaves through the windows.
+        sources = opening_cells(d.wall, d.at, 0.16, w, h);
+        for win in &layout.windows {
+            sinks.extend(opening_cells(win.wall, win.at, win.size.max(0.1), w, h));
+        }
+        // No window: qi still settles somewhere, weakly, at the wall across from the door.
+        if sinks.is_empty() {
+            weak_sink = true;
+            sinks = opening_cells(opposite(d.wall), 0.5, 0.3, w, h);
+        }
+    } else if let Some(first) = layout.windows.first() {
+        // No door in the photo: the room still breathes through its windows.
+        weak_sink = true;
+        for win in &layout.windows {
+            sources.extend(opening_cells(win.wall, win.at, win.size.max(0.1), w, h));
+        }
+        sinks = opening_cells(opposite(first.wall), 0.5, 0.5, w, h);
     }
     for &(x, y) in &sources {
         kind[idx(x, y)] = Cell::Source;
@@ -141,7 +149,7 @@ pub fn solve(scene: &Scene, w: usize, h: usize, iterations: usize) -> Field {
     }
     let omega = 1.85;
     if sources.is_empty() {
-        // No door seen: no flow, only stagnation is meaningful.
+        // No door and no window seen: no flow, only stagnation is meaningful.
         return pack(w, h, &vec![0.0; w * h], &vec![0.0; w * h], &stagnant, &sha);
     }
     for _ in 0..iterations {
@@ -314,9 +322,18 @@ mod tests {
     }
 
     #[test]
-    fn no_door_means_no_flow() {
+    fn no_door_breathes_through_windows() {
         let mut s = messy_scene();
         s.layout.door = None;
+        let f = solve(&s, 20, 16, 200);
+        assert!((0..20 * 16).any(|i| f.data[i * 4] != 0.0 || f.data[i * 4 + 1] != 0.0));
+    }
+
+    #[test]
+    fn no_door_and_no_window_means_no_flow() {
+        let mut s = messy_scene();
+        s.layout.door = None;
+        s.layout.windows.clear();
         let f = solve(&s, 20, 16, 100);
         assert!((0..20 * 16).all(|i| f.data[i * 4] == 0.0 && f.data[i * 4 + 1] == 0.0));
     }

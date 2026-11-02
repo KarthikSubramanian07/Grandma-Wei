@@ -1,0 +1,54 @@
+{
+  "is_room": true,
+  "kind": "kids_room",
+  "people_present": false,
+  "confidence": "high",
+  "facts": {
+    "bed_door": "unseen",
+    "headboard": "solid_wall",
+    "headboard_solid": "no",
+    "over_bed": "yes",
+    "mirror_facing_bed": "no",
+    "under_bed": "unseen",
+    "bed_access": "one_side",
+    "electronics_near_bed": "none",
+    "desk": "facing_wall",
+    "door_path": "unseen",
+    "door_opens_fully": "unseen",
+    "door_window_aligned": "unseen",
+    "clutter": "minimal",
+    "sharp_corners": "no",
+    "natural_light": "bright",
+    "artificial_light": "layered_warm",
+    "plants": "none",
+    "elements": { "wood": "present", "fire": "present", "earth": "present", "metal": "present", "water": "absent" }
+  },
+  "items": [
+    { "id": "bed", "kind": "bed", "detail": "the bed with the pink blanket", "box": [0.428, 0.533, 0.378, 0.385] },
+    { "id": "slope", "kind": "other", "detail": "the slanted ceiling right over the bed", "box": [0.356, 0.0, 0.644, 0.56] },
+    { "id": "window", "kind": "window", "detail": "the bright window with the pink curtains", "box": [0.044, 0.215, 0.211, 0.34] },
+    { "id": "desk", "kind": "desk", "detail": "the white desk under the window", "box": [0.0, 0.57, 0.283, 0.297] },
+    { "id": "chair", "kind": "chair", "detail": "the little pink desk chair", "box": [0.153, 0.585, 0.149, 0.274] },
+    { "id": "ladder", "kind": "shelf", "detail": "the ladder shelf with the swan on top", "box": [0.306, 0.296, 0.111, 0.4] },
+    { "id": "cubby", "kind": "shelf", "detail": "the cubby full of stuffed animals keeping watch", "box": [0.803, 0.593, 0.197, 0.355] },
+    { "id": "lamp", "kind": "lamp", "detail": "the desk lamp", "box": [0.205, 0.48, 0.045, 0.105] }
+  ],
+  "layout": {
+    "door": null,
+    "windows": [{ "wall": "far", "at": 0.16, "size": 0.24 }],
+    "pieces": [
+      { "kind": "bed", "x": 0.46, "y": 0.02, "w": 0.3, "h": 0.55, "head": "far" },
+      { "kind": "desk", "x": 0.02, "y": 0.02, "w": 0.28, "h": 0.13, "head": null },
+      { "kind": "chair", "x": 0.12, "y": 0.17, "w": 0.1, "h": 0.1, "head": null },
+      { "kind": "shelf", "x": 0.32, "y": 0.01, "w": 0.1, "h": 0.05, "head": null },
+      { "kind": "shelf", "x": 0.8, "y": 0.62, "w": 0.18, "h": 0.12, "head": null },
+      { "kind": "rug", "x": 0.18, "y": 0.3, "w": 0.45, "h": 0.5, "head": null }
+    ]
+  },
+  "observations": [
+    "a cubby of stuffed animals keeping watch over the bed",
+    "a swan supervising from the top shelf",
+    "a slanted ceiling hanging low over the pillow",
+    "a desk that faces a very nice window and nothing else"
+  ]
+}

@@ -146,7 +146,8 @@
       ],
       "effort": "an_hour",
       "points": 16,
-      "element": null
+      "element": null,
+      "blocked_by": null
     },
     {
       "id": "move_desk",
@@ -154,8 +155,9 @@
         "desk"
       ],
       "effort": "an_hour",
-      "points": 7,
-      "element": null
+      "points": 6,
+      "element": null,
+      "blocked_by": null
     },
     {
       "id": "declutter",
@@ -163,8 +165,9 @@
         "clutter"
       ],
       "effort": "a_weekend",
-      "points": 7,
-      "element": null
+      "points": 6,
+      "element": null,
+      "blocked_by": null
     },
     {
       "id": "turn_the_mirror",
@@ -173,7 +176,8 @@
       ],
       "effort": "two_minutes",
       "points": 5,
-      "element": null
+      "element": null,
+      "blocked_by": null
     },
     {
       "id": "clear_door_path",
@@ -182,7 +186,8 @@
       ],
       "effort": "twenty_minutes",
       "points": 3,
-      "element": null
+      "element": null,
+      "blocked_by": null
     },
     {
       "id": "clear_under_bed",
@@ -191,7 +196,8 @@
       ],
       "effort": "twenty_minutes",
       "points": 3,
-      "element": null
+      "element": null,
+      "blocked_by": null
     },
     {
       "id": "screens_out",
@@ -200,7 +206,8 @@
       ],
       "effort": "two_minutes",
       "points": 2,
-      "element": null
+      "element": null,
+      "blocked_by": null
     },
     {
       "id": "real_plant",
@@ -209,7 +216,8 @@
       ],
       "effort": "twenty_minutes",
       "points": 2,
-      "element": null
+      "element": null,
+      "blocked_by": null
     },
     {
       "id": "warm_lamp",
@@ -218,7 +226,8 @@
       ],
       "effort": "an_afternoon",
       "points": 2,
-      "element": null
+      "element": null,
+      "blocked_by": null
     },
     {
       "id": "balance_elements",
@@ -227,7 +236,8 @@
       ],
       "effort": "twenty_minutes",
       "points": 1,
-      "element": "water"
+      "element": "water",
+      "blocked_by": null
     },
     {
       "id": "break_the_line",
@@ -236,7 +246,8 @@
       ],
       "effort": "twenty_minutes",
       "points": 1,
-      "element": null
+      "element": null,
+      "blocked_by": null
     },
     {
       "id": "solid_headboard",
@@ -245,7 +256,8 @@
       ],
       "effort": "an_afternoon",
       "points": 1,
-      "element": null
+      "element": null,
+      "blocked_by": null
     }
   ],
   "headline": "bed_door",

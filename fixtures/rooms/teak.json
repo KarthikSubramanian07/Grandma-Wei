@@ -1,0 +1,57 @@
+{
+  "is_room": true,
+  "kind": "bedroom",
+  "people_present": false,
+  "confidence": "high",
+  "facts": {
+    "bed_door": "unseen",
+    "headboard": "solid_wall",
+    "headboard_solid": "no",
+    "over_bed": "no",
+    "mirror_facing_bed": "no",
+    "under_bed": "unseen",
+    "bed_access": "both_sides",
+    "electronics_near_bed": "none",
+    "desk": "facing_wall",
+    "door_path": "unseen",
+    "door_opens_fully": "unseen",
+    "door_window_aligned": "unseen",
+    "clutter": "minimal",
+    "sharp_corners": "no",
+    "natural_light": "bright",
+    "artificial_light": "layered_warm",
+    "plants": "none",
+    "elements": { "wood": "dominant", "fire": "present", "earth": "present", "metal": "present", "water": "present" }
+  },
+  "items": [
+    { "id": "bed", "kind": "bed", "detail": "the low teak bed with the white duvet", "box": [0.272, 0.557, 0.506, 0.425] },
+    { "id": "desk", "kind": "desk", "detail": "the long wooden desk under the window", "box": [0.022, 0.524, 0.311, 0.216] },
+    { "id": "chair", "kind": "chair", "detail": "the black office chair", "box": [0.139, 0.458, 0.122, 0.3] },
+    { "id": "window", "kind": "window", "detail": "the window full of frangipani branches", "box": [0.056, 0.216, 0.222, 0.3] },
+    { "id": "window-2", "kind": "window", "detail": "the window full of banana leaves", "box": [0.811, 0.175, 0.133, 0.424] },
+    { "id": "lamp", "kind": "lamp", "detail": "the bedside lamp on the left", "box": [0.483, 0.449, 0.05, 0.108] },
+    { "id": "lamp-2", "kind": "lamp", "detail": "the bedside lamp on the right", "box": [0.794, 0.449, 0.111, 0.208] },
+    { "id": "art", "kind": "art", "detail": "the painting of a waterfall", "box": [0.353, 0.349, 0.072, 0.153] }
+  ],
+  "layout": {
+    "door": null,
+    "windows": [
+      { "wall": "far", "at": 0.2, "size": 0.28 },
+      { "wall": "far", "at": 0.74, "size": 0.06 },
+      { "wall": "right", "at": 0.74, "size": 0.18 }
+    ],
+    "pieces": [
+      { "kind": "bed", "x": 0.46, "y": 0.15, "w": 0.52, "h": 0.36, "head": "right" },
+      { "kind": "desk", "x": 0.04, "y": 0.02, "w": 0.3, "h": 0.1, "head": null },
+      { "kind": "chair", "x": 0.15, "y": 0.13, "w": 0.08, "h": 0.08, "head": null },
+      { "kind": "table", "x": 0.89, "y": 0.05, "w": 0.09, "h": 0.08, "head": null },
+      { "kind": "table", "x": 0.89, "y": 0.53, "w": 0.09, "h": 0.08, "head": null }
+    ]
+  },
+  "observations": [
+    "a waterfall painting doing the job of a water feature",
+    "two matching bedside lamps, very proper",
+    "a desk that stares straight into the trees",
+    "a whole jungle outside and not one plant inside"
+  ]
+}
