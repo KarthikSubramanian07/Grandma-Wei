@@ -1,0 +1,257 @@
+import { Hono } from "hono";
+import type { Context } from "hono";
+import { Scene } from "@gw/schema";
+import { compose } from "@gw/voice";
+import { engine } from "./engine";
+import { EyesError, look, type MediaType } from "./eyes";
+import { checkLimit } from "./limit";
+import { type Envelope, type ReadingResult, type SharePayload, type Signed, sharePayload } from "./result";
+import { SAMPLES } from "./samples";
+import { randomId, sha256, sign, verify } from "./sign";
+import { D1Store, type Store } from "./store";
+import { personalize } from "./tongue";
+
+export interface Env {
+  ANTHROPIC_API_KEY?: string;
+  SIGNING_SECRET?: string;
+  VISION_MODEL?: string;
+  VOICE_MODEL?: string;
+  VISION_EFFORT?: "low" | "medium" | "high";
+  VOICE_EFFORT?: "low" | "medium" | "high";
+  /** "1" pauses new readings (samples and shares keep working). */
+  READS_PAUSED?: string;
+  READS_PER_HOUR?: string;
+  READS_PER_DAY?: string;
+  DB?: D1Database;
+}
+
+export type CardFormat = "post" | "story" | "og";
+
+export interface Deps {
+  eyes?: typeof look;
+  tongue?: typeof personalize;
+  /** Renders a scorecard PNG. Injected so the server package stays light in tests. */
+  card?: (payload: SharePayload, format: CardFormat, origin: string) => Promise<Uint8Array>;
+  /** Override storage (tests). */
+  store?: Store | null;
+}
+
+const DEFAULT_MODEL = "claude-opus-5-5";
+const MAX_IMAGE_B64 = 3_000_000; // ~2.2 MB of image; the browser sends ~300 KB
+const MEDIA_TYPES = new Set<MediaType>(["image/jpeg", "image/png", "image/webp"]);
+
+/** Error bodies speak in her voice; the code is for the UI. */
+const ERR = {
+  napping: "Grandma is taking a nap. Try the sample rooms, or come back a little later.",
+  no_eyes: "Grandma left her glasses at home, so she can't read photos on this site yet. The sample rooms still work.",
+  too_big: "That photo is too big. Even for me.",
+  bad_image: "I couldn't open that photo. Try a regular JPEG or PNG.",
+  slow_down: "Slow down. I'm one grandmother. Try again in an hour.",
+  busy_day: "Busy day. I've read too many rooms today. Come back tomorrow.",
+  refused: "I'm not going to read that one. Show me a room.",
+  unreadable: "I looked and looked and couldn't make sense of it. Try again from a corner, with the lights on.",
+  upstream: "My eyes aren't working right now. Give it a minute and try again.",
+  forged: "That reading isn't one of mine.",
+  no_fridge: "Sharing isn't switched on here yet.",
+  not_found: "I don't have that one. Maybe it was deleted.",
+} as const;
+
+type ErrCode = keyof typeof ERR;
+
+function fail(c: Context, status: 400 | 403 | 404 | 413 | 429 | 502 | 503, code: ErrCode) {
+  return c.json({ error: code, message: ERR[code] }, status);
+}
+
+async function signingKey(env: Env): Promise<string> {
+  if (env.SIGNING_SECRET) return env.SIGNING_SECRET;
+  // Fall back to a key derived from the API key, so a deploy with only an API key is still safe.
+  if (env.ANTHROPIC_API_KEY) return sha256(`grandma-wei:sign:${env.ANTHROPIC_API_KEY}`);
+  return "grandma-wei-local-development-only";
+}
+
+async function envelope(env: Env, s: Signed): Promise<Envelope> {
+  const result: ReadingResult = {
+    id: s.id,
+    rules_version: engine.version(),
+    sample: s.sample,
+    scene: s.scene,
+    reading: engine.read(s.scene),
+    voice: s.voice,
+    diff: s.diff,
+    suggestion: engine.suggestBed(s.scene),
+  };
+  const signed = JSON.stringify(s);
+  return { result, signed, sig: await sign(await signingKey(env), signed) };
+}
+
+async function openSigned(env: Env, signed: unknown, sig: unknown): Promise<Signed | null> {
+  if (typeof signed !== "string" || typeof sig !== "string" || signed.length > 200_000) return null;
+  if (!(await verify(await signingKey(env), signed, sig))) return null;
+  try {
+    const s = JSON.parse(signed) as Signed;
+    return s.v === 1 && Scene.safeParse(s.scene).success ? s : null;
+  } catch {
+    return null;
+  }
+}
+
+export function createApp(deps: Deps = {}) {
+  const eyes = deps.eyes ?? look;
+  const tongue = deps.tongue ?? personalize;
+  const app = new Hono<{ Bindings: Env }>();
+  const storeFor = (env: Env): Store | null =>
+    deps.store !== undefined ? deps.store : env.DB ? new D1Store(env.DB) : null;
+
+  app.use("*", async (c, next) => {
+    await next();
+    c.header("Cache-Control", c.res.headers.get("Cache-Control") ?? "no-store");
+    c.header("X-Content-Type-Options", "nosniff");
+    c.header("Referrer-Policy", "strict-origin-when-cross-origin");
+  });
+
+  app.get("/api/health", (c) =>
+    c.json({
+      ok: true,
+      rules_version: engine.version(),
+      eyes: Boolean(c.env?.ANTHROPIC_API_KEY) && c.env?.READS_PAUSED !== "1",
+      fridge: Boolean(storeFor(c.env ?? {})),
+    }),
+  );
+
+  app.get("/api/samples", (c) =>
+    c.json(Object.entries(SAMPLES).map(([id, s]) => ({ id, title: s.title, photo: s.photo }))),
+  );
+
+  app.get("/api/sample/:name", async (c) => {
+    const sample = SAMPLES[c.req.param("name")];
+    if (!sample) return fail(c, 404, "not_found");
+    const name = c.req.param("name");
+    const reading = engine.read(sample.scene);
+    const voice = compose(sample.scene, reading, `sample:${name}`);
+    return c.json(await envelope(c.env ?? {}, { v: 1, id: `sample-${name}`, sample: name, scene: sample.scene, voice, diff: null }));
+  });
+
+  app.post("/api/read", async (c) => {
+    const env = c.env ?? {};
+    if (env.READS_PAUSED === "1") return fail(c, 503, "napping");
+    if (!env.ANTHROPIC_API_KEY) return fail(c, 503, "no_eyes");
+
+    let body: { image?: unknown; media_type?: unknown; prev?: { signed?: unknown; sig?: unknown } };
+    try {
+      body = await c.req.json();
+    } catch {
+      return fail(c, 400, "bad_image");
+    }
+    const { image, media_type } = body;
+    if (typeof image !== "string" || !/^[A-Za-z0-9+/=]+$/.test(image.slice(0, 1000))) return fail(c, 400, "bad_image");
+    if (image.length > MAX_IMAGE_B64) return fail(c, 413, "too_big");
+    if (!MEDIA_TYPES.has(media_type as MediaType)) return fail(c, 400, "bad_image");
+
+    const limit = await checkLimit(
+      storeFor(env),
+      c.req.header("cf-connecting-ip") ?? "local",
+      await signingKey(env),
+      Number(env.READS_PER_HOUR ?? 12),
+      Number(env.READS_PER_DAY ?? 400),
+    );
+    if (!limit.ok) return fail(c, 429, limit.reason === "daily" ? "busy_day" : "slow_down");
+
+    let scene: Scene;
+    try {
+      scene = await eyes(
+        { apiKey: env.ANTHROPIC_API_KEY, model: env.VISION_MODEL ?? DEFAULT_MODEL, effort: env.VISION_EFFORT ?? "medium" },
+        image,
+        media_type as MediaType,
+      );
+    } catch (e) {
+      const code = e instanceof EyesError ? e.code : "upstream";
+      if (code === "refused") return fail(c, 400, "refused");
+      if (code === "unreadable") return fail(c, 502, "unreadable");
+      if (code === "busy") return fail(c, 503, "upstream");
+      return fail(c, 502, "upstream");
+    }
+
+    const prev = body.prev ? await openSigned(env, body.prev.signed, body.prev.sig) : null;
+    const reading = engine.read(scene);
+    const diff = prev ? engine.diff(prev.scene, scene) : null;
+    const id = randomId(9);
+    const draft = compose(scene, reading, id, diff ?? undefined);
+    const voice = await tongue(
+      { apiKey: env.ANTHROPIC_API_KEY, model: env.VOICE_MODEL ?? DEFAULT_MODEL, effort: env.VOICE_EFFORT ?? "low" },
+      scene,
+      reading,
+      draft,
+    );
+    return c.json(await envelope(env, { v: 1, id, sample: null, scene, voice, diff }));
+  });
+
+  /** Publish a scorecard. Stores text only and returns a token that can delete it. */
+  app.post("/api/share", async (c) => {
+    const env = c.env ?? {};
+    const store = storeFor(env);
+    if (!store) return fail(c, 503, "no_fridge");
+    const body = await c.req.json().catch(() => ({}));
+    const s = await openSigned(env, body.signed, body.sig);
+    if (!s) return fail(c, 403, "forged");
+    const reading = engine.read(s.scene);
+    const id = randomId(9);
+    const token = randomId(18);
+    const payload = sharePayload(id, Date.now(), engine.version(), s, reading);
+    await store.putShare(id, await sha256(token), JSON.stringify(payload), payload.created);
+    return c.json({ id, path: `/s/${id}`, delete_token: token, payload });
+  });
+
+  app.get("/api/share/:id", async (c) => {
+    const store = storeFor(c.env ?? {});
+    if (!store) return fail(c, 503, "no_fridge");
+    const row = await store.getShare(c.req.param("id"));
+    if (!row) return fail(c, 404, "not_found");
+    c.header("Cache-Control", "public, max-age=60");
+    return c.body(row.payload, 200, { "Content-Type": "application/json; charset=utf-8" });
+  });
+
+  app.delete("/api/share/:id", async (c) => {
+    const store = storeFor(c.env ?? {});
+    if (!store) return fail(c, 503, "no_fridge");
+    const row = await store.getShare(c.req.param("id"));
+    if (!row) return fail(c, 404, "not_found");
+    const token = c.req.header("x-delete-token") ?? "";
+    if ((await sha256(token)) !== row.deleteHash) return fail(c, 403, "forged");
+    await store.deleteShare(c.req.param("id"));
+    return c.json({ deleted: true });
+  });
+
+  /** A scorecard image for a reading you hold, without publishing anything. */
+  app.post("/api/card", async (c) => {
+    if (!deps.card) return fail(c, 503, "no_fridge");
+    const env = c.env ?? {};
+    const body = await c.req.json().catch(() => ({}));
+    const s = await openSigned(env, body.signed, body.sig);
+    if (!s) return fail(c, 403, "forged");
+    const format: CardFormat = body.format === "story" ? "story" : body.format === "og" ? "og" : "post";
+    const payload = sharePayload(s.id, Date.now(), engine.version(), s, engine.read(s.scene));
+    const png = await deps.card(payload, format, new URL(c.req.url).origin);
+    return c.body(png as Uint8Array<ArrayBuffer>, 200, { "Content-Type": "image/png", "Cache-Control": "no-store" });
+  });
+
+  /** The OpenGraph image for a shared scorecard. */
+  app.get("/api/og/:file", async (c) => {
+    if (!deps.card) return fail(c, 503, "no_fridge");
+    const store = storeFor(c.env ?? {});
+    if (!store) return fail(c, 503, "no_fridge");
+    const id = c.req.param("file").replace(/\.png$/, "");
+    const row = await store.getShare(id);
+    if (!row) return fail(c, 404, "not_found");
+    const format: CardFormat = c.req.query("format") === "story" ? "story" : c.req.query("format") === "post" ? "post" : "og";
+    const png = await deps.card(JSON.parse(row.payload), format, new URL(c.req.url).origin);
+    return c.body(png as Uint8Array<ArrayBuffer>, 200, { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" });
+  });
+
+  app.notFound((c) => fail(c, 404, "not_found"));
+  app.onError((err, c) => {
+    // Log the failure, never the request: bodies can contain photos.
+    console.error("grandma-wei: unhandled", err instanceof Error ? err.message : "unknown");
+    return fail(c, 502, "upstream");
+  });
+  return app;
+}
