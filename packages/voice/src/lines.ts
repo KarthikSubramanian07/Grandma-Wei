@@ -345,7 +345,7 @@ export const MAGNETS: Record<MagnetId, { name: string; blurb: string }> = {
   out_of_the_coffin: { name: "Out of the Coffin", blurb: "Moved the bed out of the coffin position." },
   mirror_mirror: { name: "Mirror, Mirror", blurb: "The mirror stopped watching you sleep." },
   clean_under_there: { name: "Clean Under There", blurb: "Nothing under the bed but floor." },
-  commanding_officer: { name: "Commanding Officer", blurb: "Bed or desk in the commanding position." },
+  commanding_officer: { name: "Commanding Officer", blurb: "Bed or desk where you can see the door." },
   plant_parent: { name: "Plant Parent", blurb: "A living plant, actually alive." },
   tidy_up: { name: "Tidy Up", blurb: "Less clutter than last time." },
   screens_down: { name: "Screens Down", blurb: "No screens by the pillow." },

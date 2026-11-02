@@ -45,9 +45,9 @@ const C = {
 };
 
 const PILLARS = [
-  ["command", "Command", C.seal],
-  ["flow", "Flow", C.ink],
-  ["rest", "Rest", C.ink],
+  ["command", "Position", C.seal],
+  ["flow", "Space", C.ink],
+  ["rest", "Sleep", C.ink],
   ["light", "Light", C.jade],
   ["balance", "Balance", C.brass],
 ] as const;
