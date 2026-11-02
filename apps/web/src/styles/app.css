@@ -1,0 +1,399 @@
+/* Grandma Wei. Paper on a kitchen table at night, under one warm lamp. */
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("/fonts/newsreader.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("/fonts/newsreader-italic.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/geist-mono.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Kalam";
+  src: url("/fonts/kalam.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Kalam";
+  src: url("/fonts/kalam-bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --paper: #f3ede2;
+  --paper-2: #ebe3d4;
+  --paper-3: #e2d6c2;
+  --ink: #1e1a16;
+  --ink-soft: #5a5148;
+  --muted: #8c8173;
+  --line: #d9cfbe;
+  --seal: #c23a22;
+  --seal-deep: #9e2d19;
+  --jade: #2e6a58;
+  --brass: #b4873a;
+  --note: #fbf3c9;
+  --table: #171310;
+  --table-2: #211b16;
+  --lamp: #f0c987;
+  --on-table: #e9e0d0;
+  --on-table-soft: #a99c8a;
+
+  --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --hand: "Kalam", "Bradley Hand", cursive;
+
+  --r: 4px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ease-out: cubic-bezier(0.2, 0.9, 0.2, 1);
+  --ease-stamp: cubic-bezier(0.2, 1.6, 0.4, 1);
+
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .48  0 0 0 0 .38  0 0 0 .16 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+* {
+  margin: 0;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--table);
+}
+body {
+  min-height: 100dvh;
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--on-table);
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -8%, rgba(240, 201, 135, 0.2), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(240, 201, 135, 0.12), transparent 70%),
+    var(--table);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  font-optical-sizing: auto;
+  overflow-x: hidden;
+}
+body::before {
+  /* Wood-ish grain on the table, very faint. */
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: var(--grain);
+  mix-blend-mode: overlay;
+  z-index: 0;
+}
+#root {
+  position: relative;
+  z-index: 1;
+}
+img,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+:focus-visible {
+  outline: 2px solid var(--lamp);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+::selection {
+  background: var(--seal);
+  color: var(--paper);
+}
+
+/* ---------- type ---------- */
+.mono {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.hand {
+  font-family: var(--hand);
+}
+.display {
+  font-weight: 300;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+}
+.italic {
+  font-style: italic;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- paper ---------- */
+.paper {
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 3px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.45) inset,
+    0 30px 60px -24px rgba(0, 0, 0, 0.75),
+    0 2px 6px rgba(0, 0, 0, 0.45);
+}
+.paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: var(--grain);
+  mix-blend-mode: multiply;
+  opacity: 0.6;
+}
+.paper .mono {
+  color: var(--muted);
+}
+
+/* ---------- layout ---------- */
+.shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: calc(18px + var(--safe-top)) var(--gutter) 18px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.wordmark {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.wordmark em {
+  font-weight: 400;
+}
+.wordmark .chop {
+  width: 22px;
+  height: 22px;
+}
+.nav {
+  display: flex;
+  gap: clamp(12px, 3vw, 28px);
+}
+.nav a {
+  text-decoration: none;
+  color: var(--on-table-soft);
+  padding: 8px 2px;
+}
+.nav a:hover,
+.nav a[aria-current="page"] {
+  color: var(--on-table);
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  appearance: none;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 26px 0 22px;
+  border-radius: 999px;
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    transform 0.15s var(--ease-out),
+    box-shadow 0.15s,
+    background 0.15s;
+  touch-action: manipulation;
+  user-select: none;
+}
+.btn:active {
+  transform: translateY(1px) scale(0.99);
+}
+.btn .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--seal);
+  flex: none;
+}
+.btn-paper {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 10px 24px -10px rgba(0, 0, 0, 0.8);
+}
+.btn-paper:hover {
+  transform: translateY(-1px);
+}
+.btn-ink {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12) inset,
+    0 8px 18px -8px rgba(0, 0, 0, 0.6);
+}
+.btn-ink:hover {
+  transform: translateY(-1px);
+}
+.btn-ghost {
+  background: transparent;
+  color: inherit;
+  box-shadow: inset 0 0 0 1px currentColor;
+  opacity: 0.85;
+}
+.btn-ghost:hover {
+  opacity: 1;
+}
+.btn-sm {
+  min-height: 40px;
+  font-size: 15px;
+  padding: 0 16px;
+}
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: progress;
+}
+.link-btn {
+  background: none;
+  border: 0;
+  padding: 6px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+/* ---------- sticky notes ---------- */
+.note {
+  position: absolute;
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: clamp(13px, 1.6vw, 16px);
+  line-height: 1.05;
+  color: var(--seal-deep);
+  background: var(--note);
+  padding: 6px 9px 7px;
+  max-width: 13em;
+  box-shadow: 0 8px 12px -8px rgba(0, 0, 0, 0.55);
+  transform-origin: 50% 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.note.good {
+  color: var(--jade);
+}
+.note::before {
+  /* a bit of tape */
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 34px;
+  height: 12px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- misc ---------- */
+.rule {
+  height: 1px;
+  background: var(--line);
+  border: 0;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+.fade-in {
+  animation: fade-in 0.6s var(--ease-out) both;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + var(--safe-bottom));
+  transform: translateX(-50%);
+  z-index: 50;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 12px 18px;
+  border-radius: 999px;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.8);
+  font-size: 16px;
+  animation: fade-in 0.3s var(--ease-out) both;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
