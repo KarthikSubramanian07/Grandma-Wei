@@ -6,6 +6,7 @@ import { onLinkClick, usePath } from "./lib/router";
 import { useToast } from "./lib/toast";
 import { Fridge } from "./pages/Fridge";
 import { Home } from "./pages/Home";
+import { NotFound } from "./pages/NotFound";
 import { How } from "./pages/How";
 import { Privacy } from "./pages/Privacy";
 import { Reading } from "./pages/Reading";
@@ -20,7 +21,8 @@ function route(path: string) {
   if (path === "/fridge") return <Fridge />;
   if (path === "/how") return <How />;
   if (path === "/privacy") return <Privacy />;
-  return <Home />;
+  if (path === "/" || path === "") return <Home />;
+  return <NotFound />;
 }
 
 export function App() {
@@ -55,7 +57,7 @@ export function App() {
       <div id="main">{route(path)}</div>
       <footer className="footer shell">
         <span>
-          Made with love and mild disappointment. Not affiliated with any real grandmother.
+          Made with love and mild disappointment. Not affiliated with any real grandmother, though she has heard about this.
         </span>
         <span className="footer-links">
           <a href="/privacy" onClick={onLinkClick}>

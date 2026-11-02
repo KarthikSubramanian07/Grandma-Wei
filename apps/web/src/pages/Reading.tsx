@@ -215,6 +215,7 @@ function Result({ env, photo, visit }: { env: Envelope; photo: string; visit: Vi
                       setDone(new Set(all));
                       setTab("sketch");
                       setStamp((n) => n + 1);
+                      toast("She knows you didn't. But fine, here's how it would look.");
                     }}
                   >
                     <span className="dot" aria-hidden="true" />

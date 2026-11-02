@@ -1198,3 +1198,55 @@
 .fridge-empty-first {
   margin-bottom: 28px;
 }
+
+/* ---------------- overheard ---------------- */
+.overheard {
+  padding-top: 56px;
+}
+.overheard h2 {
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 400;
+  margin-bottom: 18px;
+}
+.overheard ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.overheard-note {
+  background: var(--note);
+  color: var(--ink);
+  padding: 16px 18px 14px;
+  transform: rotate(var(--tilt));
+  box-shadow: 0 14px 22px -14px rgba(0, 0, 0, 0.7);
+  position: relative;
+}
+.overheard-note::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 46px;
+  height: 14px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: rgba(255, 255, 255, 0.5);
+}
+.overheard-note p {
+  font-family: var(--hand);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.2;
+  color: var(--seal-deep);
+}
+.overheard-note .mono {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink-soft);
+}
+@media (min-width: 760px) {
+  .overheard ul {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+}

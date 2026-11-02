@@ -40,7 +40,7 @@ export function Fridge() {
   const remove = async (v: Visit) => {
     for (const s of v.shares ?? []) await api.deleteShare(s.id, s.token).catch(() => {});
     await deleteVisit(v.id);
-    toast("Gone. She forgets nothing, but this browser does.");
+    toast("Gone from this browser. She remembers, but she won't bring it up.");
     load();
   };
   const wipe = async () => {
@@ -60,7 +60,7 @@ export function Fridge() {
       {real.length === 0 && (
         <div className="empty-state fridge-empty-first">
           <Grandma mood="unimpressed" size={110} />
-          <p>Nothing on the fridge yet. Show her a room and the magnets start coming.</p>
+          <p>Nothing on the fridge yet. Even the fridge is disappointed. Show her a room and the magnets start coming.</p>
           <PhotoPicker />
         </div>
       )}
