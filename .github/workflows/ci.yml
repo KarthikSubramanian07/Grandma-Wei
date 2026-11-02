@@ -66,7 +66,7 @@ jobs:
         run: cd apps/web && ./node_modules/.bin/playwright install --with-deps chromium
       - name: End-to-end tests
         run: cd apps/web && ./node_modules/.bin/playwright test
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-traces
