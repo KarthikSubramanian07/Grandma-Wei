@@ -9,3 +9,6 @@ test-results/
 playwright-report/
 apps/web/e2e/__screens__/
 apps/web/public/og/
+apps/web/public/favicon.svg
+apps/web/public/*.png
+apps/web/public/fonts/card/

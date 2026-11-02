@@ -1,0 +1,33 @@
+{
+  "name": "@gw/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "api": "wrangler pages dev dist --port 8788",
+    "og": "bun ../../scripts/og.ts",
+    "build": "bun run og && vite build",
+    "preview": "wrangler pages dev dist --port 8788",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "@gw/card": "workspace:*",
+    "@gw/qi": "workspace:*",
+    "@gw/schema": "workspace:*",
+    "@gw/server": "workspace:*",
+    "@gw/voice": "workspace:*",
+    "@resvg/resvg-wasm": "^2.6.2",
+    "hono": "^4.13.16",
+    "idb-keyval": "^6.3.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.2.1",
+    "vite": "^8.3.5",
+    "wrangler": "^4.156.1"
+  }
+}
