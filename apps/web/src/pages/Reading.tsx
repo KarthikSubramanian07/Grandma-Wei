@@ -126,7 +126,7 @@ function Result({ env, photo, visit }: { env: Envelope; photo: string; visit: Vi
 
   useEffect(() => {
     document.title = reading.score === null ? "Grandma Wei" : `${reading.score}/100 · Grandma Wei`;
-    return () => void (document.title = "Grandma Wei · Show her your room");
+    return () => void (document.title = "Grandma Wei · AI feng shui reading for your room, from one photo");
   }, [reading.score]);
 
   const toggle = (id: ChoreId) => {

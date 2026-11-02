@@ -1426,3 +1426,29 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* About and Contact */
+.info h1 {
+  font-size: clamp(40px, 7vw, 68px);
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  padding: 24px 0 18px;
+}
+.info h2 {
+  font-size: 26px;
+  font-weight: 400;
+  margin: 36px 0 10px;
+}
+.info p,
+.info li {
+  color: var(--on-table-soft);
+  margin-bottom: 12px;
+}
+.info strong {
+  color: var(--on-table);
+  font-weight: 500;
+}
+.info ul {
+  padding-left: 1.2em;
+}
