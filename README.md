@@ -2,7 +2,7 @@
 
 **Take a photo of your room. Grandma Wei reads its feng shui, scores it, and tells you, lovingly but without mercy, what to fix.**
 
-**Live at [grandma-wei.pages.dev](https://grandma-wei.pages.dev)**
+**Live at [grandma-wei.pages.dev](https://grandma-wei.pages.dev)** · [![CI](https://github.com/KarthikSubramanian07/Grandma-Wei/actions/workflows/ci.yml/badge.svg)](https://github.com/KarthikSubramanian07/Grandma-Wei/actions/workflows/ci.yml)
 
 `feng-shui` · `rust` · `webassembly` · `claude` · `cloudflare-pages` · `bun` · `react` · `game`
 
