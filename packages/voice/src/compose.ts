@@ -173,7 +173,7 @@ export function compose(scene: Scene, reading: Reading, seed: string, diff?: Dif
   }
   for (const rule of reading.unseen) {
     const ask = UNSEEN[rule];
-    if (ask && asks.length < 3) asks.push(ask);
+    if (ask && asks.length < 2) asks.push(ask);
   }
   if (reading.state === "need_better_photo") {
     return {

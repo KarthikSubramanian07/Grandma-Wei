@@ -118,6 +118,12 @@ function Result({ env, photo, visit }: { env: Envelope; photo: string; visit: Vi
     return { scene: s, reading: qi.read(s) };
   }, [done, scene]);
 
+  // A small thunk when the seal lands, on phones that can.
+  useEffect(() => {
+    const t = setTimeout(() => navigator.vibrate?.([14, 40, 22]), 700);
+    return () => clearTimeout(t);
+  }, [stamp]);
+
   useEffect(() => {
     document.title = reading.score === null ? "Grandma Wei" : `${reading.score}/100 · Grandma Wei`;
     return () => void (document.title = "Grandma Wei · Show her your room");
@@ -225,7 +231,17 @@ function Result({ env, photo, visit }: { env: Envelope; photo: string; visit: Vi
                 <PhotoPicker primary="Now show her your room" tone={done.size ? "paper" : "ink"} compact />
               </>
             ) : (
-              ok && <PhotoPicker prev={visit ?? undefined} primary="I did my chores. Show her again." compact />
+              ok && (
+                <>
+                  {photo && (
+                    <p className="retake-tip">
+                      <img src={photo} alt="" />
+                      <span>Same corner, same height as this one. She compares.</span>
+                    </p>
+                  )}
+                  <PhotoPicker prev={visit ?? undefined} primary="I did my chores. Show her again." compact />
+                </>
+              )
             )}
             {ok && (
               <div className="next-row">
@@ -249,11 +265,28 @@ function Result({ env, photo, visit }: { env: Envelope; photo: string; visit: Vi
         </aside>
 
         <section className="result-photo" aria-label="Your room">
-          <div className="tabs" role="tablist">
-            <button role="tab" aria-selected={tab === "photo"} onClick={() => setTab("photo")}>
+          <div
+            className="tabs"
+            role="tablist"
+            aria-label="Photo or sketch"
+            onKeyDown={(e) => {
+              if (!ok || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+              const next = tab === "photo" ? "sketch" : "photo";
+              setTab(next);
+              (e.currentTarget.querySelector(`[data-tab=${next}]`) as HTMLElement | null)?.focus();
+            }}
+          >
+            <button role="tab" data-tab="photo" aria-selected={tab === "photo"} tabIndex={tab === "photo" ? 0 : -1} onClick={() => setTab("photo")}>
               Her notes
             </button>
-            <button role="tab" aria-selected={tab === "sketch"} onClick={() => setTab("sketch")} disabled={!ok}>
+            <button
+              role="tab"
+              data-tab="sketch"
+              aria-selected={tab === "sketch"}
+              tabIndex={tab === "sketch" ? 0 : -1}
+              onClick={() => setTab("sketch")}
+              disabled={!ok}
+            >
               How energy moves
             </button>
           </div>

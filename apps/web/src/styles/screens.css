@@ -666,8 +666,8 @@
   gap: 22px;
   grid-template-areas:
     "card"
-    "talk"
-    "photo";
+    "photo"
+    "talk";
 }
 .result-card {
   grid-area: card;
@@ -1249,4 +1249,21 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 24px;
   }
+}
+
+/* Before a retake: your last photo, and a tip so she can compare. */
+.retake-tip {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+  align-items: center;
+  font-size: 15px;
+  color: var(--on-table-soft);
+}
+.retake-tip img {
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 0 0 3px var(--paper);
 }
