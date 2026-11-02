@@ -1,0 +1,87 @@
+{
+  "confidence": "high",
+  "facts": {
+    "artificial_light": "layered_warm",
+    "bed_access": "both_sides",
+    "bed_door": "commanding",
+    "clutter": "minimal",
+    "desk": "commanding",
+    "door_opens_fully": "yes",
+    "door_path": "clear",
+    "door_window_aligned": "no",
+    "electronics_near_bed": "none",
+    "elements": {
+      "earth": "dominant",
+      "fire": "present",
+      "metal": "present",
+      "water": "present",
+      "wood": "present"
+    },
+    "headboard": "solid_wall",
+    "headboard_solid": "yes",
+    "mirror_facing_bed": "no",
+    "natural_light": "bright",
+    "over_bed": "no",
+    "plants": "healthy",
+    "sharp_corners": "no",
+    "under_bed": "clear"
+  },
+  "is_room": true,
+  "items": [
+    {
+      "box": [
+        0.3,
+        0.4,
+        0.4,
+        0.3
+      ],
+      "detail": "the bed",
+      "id": "bed",
+      "kind": "bed"
+    }
+  ],
+  "kind": "bedroom",
+  "layout": {
+    "door": {
+      "at": 0.5,
+      "wall": "near"
+    },
+    "pieces": [
+      {
+        "h": 0.24,
+        "head": "left",
+        "kind": "bed",
+        "w": 0.42,
+        "x": 0.01,
+        "y": 0.08
+      },
+      {
+        "h": 0.3,
+        "head": null,
+        "kind": "desk",
+        "w": 0.16,
+        "x": 0.8,
+        "y": 0.45
+      },
+      {
+        "h": 0.1,
+        "head": null,
+        "kind": "plant",
+        "w": 0.1,
+        "x": 0.85,
+        "y": 0.05
+      }
+    ],
+    "windows": [
+      {
+        "at": 0.5,
+        "size": 0.2,
+        "wall": "far"
+      }
+    ]
+  },
+  "observations": [
+    "a laundry mountain on the chair"
+  ],
+  "people_present": false
+}

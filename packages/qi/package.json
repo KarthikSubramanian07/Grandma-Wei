@@ -1,0 +1,17 @@
+{
+  "name": "@gw/qi",
+  "type": "module",
+  "description": "Grandma Wei's rules engine: deterministic feng shui scoring, chores, and the qi flow field.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "files": [
+    "qi_bg.wasm",
+    "qi.js",
+    "qi.d.ts"
+  ],
+  "main": "qi.js",
+  "types": "qi.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
