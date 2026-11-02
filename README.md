@@ -61,7 +61,7 @@ flowchart LR
     QiEdge["qi.wasm (Rust)<br/>the real score"]
     D1[("D1<br/>shares, text only<br/>rate limits")]
     Share["/s/:id<br/>share page + OpenGraph"]
-    OG["/og/&lt;score&gt;.png<br/>pre-rendered at build"]
+    OG["/og/score.png<br/>one per score, pre-rendered"]
   end
 
   Claude["Claude API<br/>vision + voice"]
@@ -104,7 +104,7 @@ sequenceDiagram
   S->>S: Lint every line, keep only clean ones, sign
   S-->>B: Reading (photo never stored)
   B->>B: Stamp the score, tape the notes, save to the fridge
-  B-->>You: 49/100. "Your bed is in the coffin position."
+  B-->>You: 49 out of 100, and the coffin line
 ```
 
 ### The loop
