@@ -24,7 +24,7 @@ const ORDER: MagnetId[] = [
   "id_sleep_here",
 ];
 
-const COLORS = ["#C23A22", "#2E6A58", "#B4873A", "#1E1A16", "#5F7FA6", "#9E2D19"];
+const COLORS = ["#B3272D", "#2E6A58", "#4F6B8A", "#1C1B19", "#5F7FA6", "#8E1F24"];
 
 /** Grandma's fridge: your readings and magnets. Everything here lives only in this browser. */
 export function Fridge() {

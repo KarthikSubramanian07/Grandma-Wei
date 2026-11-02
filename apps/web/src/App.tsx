@@ -30,7 +30,7 @@ export function App() {
     document.documentElement.dataset.route = path.split("/")[1] || "home";
   }, [path]);
   const nav = (href: string, label: string) => (
-    <a href={href} onClick={onLinkClick} aria-current={path === href ? "page" : undefined} className="mono">
+    <a href={href} onClick={onLinkClick} aria-current={path === href ? "page" : undefined}>
       {label}
     </a>
   );

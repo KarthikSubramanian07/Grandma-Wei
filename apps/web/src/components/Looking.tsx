@@ -26,7 +26,6 @@ export function Looking({ src }: { src: string }) {
       <div className="looking-photo paper">
         <img src={src} alt="Your room, on Grandma's table" />
         <div className="loupe" aria-hidden="true" />
-        <div className="scanline" aria-hidden="true" />
       </div>
       <div className="looking-side">
         <Grandma mood="thinking" size={120} />

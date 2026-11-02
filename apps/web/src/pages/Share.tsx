@@ -53,7 +53,7 @@ export function Share({ id }: { id: string }) {
         {p.delta !== null && p.delta !== 0 && <p className="shared-delta mono">{p.delta > 0 ? `Up ${p.delta} since last time` : `Down ${-p.delta} since last time`}</p>}
         <blockquote className="sc-verdict">
           <p>{p.headline}</p>
-          <footer className="mono">— Grandma Wei</footer>
+          <footer>Grandma Wei</footer>
         </blockquote>
         {p.chores.length > 0 && (
           <section className="sc-chores">

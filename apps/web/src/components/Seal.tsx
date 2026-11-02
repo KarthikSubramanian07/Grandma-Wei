@@ -17,9 +17,9 @@ export function Seal({ size = 96, rotate = 8, className = "" }: { size?: number;
       aria-label="Grandma Wei's seal"
     >
       <g filter="url(#gw-bleed)">
-        <rect x="2" y="2" width="96" height="96" rx="7" fill="#C23A22" />
-        <rect x="9" y="9" width="82" height="82" rx="3" fill="none" stroke="#F3EDE2" strokeWidth="2.6" />
-        <path transform={`translate(${gx.toFixed(2)} ${gy.toFixed(2)}) scale(${scale.toFixed(5)})`} d={SEAL_PATH} fill="#F3EDE2" />
+        <rect x="2" y="2" width="96" height="96" rx="7" fill="#B3272D" />
+        <rect x="9" y="9" width="82" height="82" rx="3" fill="none" stroke="#F4F2ED" strokeWidth="2.6" />
+        <path transform={`translate(${gx.toFixed(2)} ${gy.toFixed(2)}) scale(${scale.toFixed(5)})`} d={SEAL_PATH} fill="#F4F2ED" />
       </g>
     </svg>
   );
