@@ -1,0 +1,10 @@
+node_modules/
+dist/
+target/
+.wrangler/
+.dev.vars
+*.log
+.DS_Store
+test-results/
+playwright-report/
+apps/web/e2e/__screens__/

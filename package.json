@@ -1,0 +1,20 @@
+{
+  "name": "grandma-wei",
+  "private": true,
+  "type": "module",
+  "description": "Take a photo of your room. Grandma Wei reads its feng shui and tells you, lovingly, what to fix.",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "qi": "cd crates/qi && CARGO_BUILD_JOBS=2 wasm-pack build --release --target web --scope gw --out-dir ../../packages/qi --out-name qi -- --features wasm && rm -f ../../packages/qi/.gitignore",
+    "test": "bun run test:rust && bun test",
+    "test:rust": "cd crates/qi && CARGO_BUILD_JOBS=2 cargo test --quiet",
+    "typecheck": "tsc -b",
+    "dev": "bun run --cwd apps/web dev",
+    "build": "bun run qi && bun run --cwd apps/web build",
+    "e2e": "bun run --cwd apps/web e2e"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "@types/bun": "latest"
+  }
+}
