@@ -7,11 +7,14 @@ const LINES = [
   "Hmm.",
   "Where's the door?",
   "Oh.",
-  "I see.",
+  "Let me get my other glasses.",
   "Is that what I think it is?",
-  "Let me count the chargers.",
+  "Counting the chargers. Still counting.",
   "Mm-hm.",
-  "Writing this down.",
+  "Checking under the bed. Mentally.",
+  "I've seen this before.",
+  "Writing this down. In pen.",
+  "Oh, I have notes.",
 ];
 
 /** While her eyes read the photo: the photo on the table, a loupe drifting over it, her muttering. */
@@ -32,7 +35,7 @@ export function Looking({ src }: { src: string }) {
         <p className="looking-line" key={i}>
           {LINES[i]}
         </p>
-        <p className="mono">She takes about twenty seconds. She's thorough.</p>
+        <p className="mono">About twenty seconds. She's thorough. She's also judging the lighting.</p>
       </div>
     </section>
   );

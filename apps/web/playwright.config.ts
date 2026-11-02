@@ -20,7 +20,7 @@ export default defineConfig({
     { name: "desktop", use: { viewport: { width: 1360, height: 900 } } },
   ],
   webServer: {
-    command: `./node_modules/.bin/wrangler d1 migrations apply grandma-wei --local && ./node_modules/.bin/wrangler pages dev dist --port ${PORT} --binding FAKE_EYES=1`,
+    command: `./node_modules/.bin/wrangler d1 migrations apply grandma-wei --local && ./node_modules/.bin/wrangler pages dev dist --port ${PORT} --binding FAKE_EYES=1 --binding READS_PER_HOUR=100000`,
     url: `http://localhost:${PORT}/api/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

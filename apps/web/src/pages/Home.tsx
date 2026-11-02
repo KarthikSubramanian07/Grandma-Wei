@@ -10,6 +10,17 @@ const TEASERS = [
   "I can see the laundry from here.",
   "Your bed. We need to talk about your bed.",
   "Sit. Show Grandma.",
+  "I already don't trust the mirror.",
+  "Just the bedroom. For now.",
+  "Everyone shows me eventually.",
+  "I brought my good glasses.",
+];
+
+/** Real lines from her bank, so the home page shows exactly how she talks. Not testimonials. */
+const OVERHEARD = [
+  { line: "Your bed is in the coffin position. I'm not angry. I'm worried.", room: "about a bedroom" },
+  { line: "Not one living thing in here. Except the dust. The dust is thriving.", room: "about a studio" },
+  { line: "Your phone gets the best spot on the nightstand. What does it pay in rent?", room: "about a dorm" },
 ];
 
 export const PRACTICE = [
@@ -98,6 +109,18 @@ export function Home() {
                   <span className="mono">{s.note}</span>
                 </span>
               </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="overheard shell" aria-labelledby="overheard-h">
+        <h2 id="overheard-h">Things she says</h2>
+        <ul>
+          {OVERHEARD.map((o, i) => (
+            <li key={o.line} className="overheard-note" style={{ ["--tilt" as string]: `${[-1.5, 1, -0.5][i]}deg` }}>
+              <p>{o.line}</p>
+              <span className="mono">{o.room}</span>
             </li>
           ))}
         </ul>
