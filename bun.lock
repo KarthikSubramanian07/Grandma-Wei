@@ -17,6 +17,7 @@
         "@gw/qi": "workspace:*",
         "@gw/schema": "workspace:*",
         "@gw/server": "workspace:*",
+        "@gw/site": "workspace:*",
         "@gw/voice": "workspace:*",
         "@resvg/resvg-wasm": "^2.6.2",
         "hono": "^4.13.16",
@@ -60,6 +61,14 @@
         "@gw/schema": "workspace:*",
         "@gw/voice": "workspace:*",
         "hono": "^4.13.16",
+      },
+    },
+    "packages/site": {
+      "name": "@gw/site",
+      "version": "0.1.0",
+      "dependencies": {
+        "@gw/schema": "workspace:*",
+        "@gw/voice": "workspace:*",
       },
     },
     "packages/voice": {
@@ -154,6 +163,8 @@
     "@gw/schema": ["@gw/schema@workspace:packages/schema"],
 
     "@gw/server": ["@gw/server@workspace:packages/server"],
+
+    "@gw/site": ["@gw/site@workspace:packages/site"],
 
     "@gw/voice": ["@gw/voice@workspace:packages/voice"],
 

@@ -6,7 +6,7 @@
     "dev": "vite",
     "api": "wrangler pages dev dist --port 8788",
     "og": "bun ../../scripts/og.ts",
-    "build": "bun run og && vite build",
+    "build": "bun run og && vite build && bun ../../scripts/prerender.ts",
     "preview": "wrangler pages dev dist --port 8788",
     "e2e": "playwright test"
   },
@@ -15,6 +15,7 @@
     "@gw/qi": "workspace:*",
     "@gw/schema": "workspace:*",
     "@gw/server": "workspace:*",
+    "@gw/site": "workspace:*",
     "@gw/voice": "workspace:*",
     "@resvg/resvg-wasm": "^2.6.2",
     "hono": "^4.13.16",
