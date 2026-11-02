@@ -3,7 +3,9 @@ name: Deploy
 # Ships main to Cloudflare Pages at grandma-wei.pages.dev.
 # Needs repository secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
 # ANTHROPIC_API_KEY turns on real photo readings; without it, the site runs
-# with practice rooms only. SIGNING_SECRET is optional.
+# with practice rooms only. SIGNING_SECRET, if set here, replaces the one
+# already stored on the Pages project. Storage is the KV namespace in
+# apps/web/wrangler.toml.
 
 on:
   push:
@@ -54,19 +56,12 @@ jobs:
           bun install --frozen-lockfile
           bun run qi
           bun run --cwd apps/web build
-      - name: Create the Pages project and D1 database if they don't exist
+      - name: Create the Pages project if it doesn't exist
         if: steps.creds.outputs.ok == 'true'
         working-directory: apps/web
         run: |
           W=./node_modules/.bin/wrangler
           $W pages project list | grep -q " $PROJECT " || $W pages project create "$PROJECT" --production-branch main
-          ID=$($W d1 list --json | jq -r '.[] | select(.name=="grandma-wei") | .uuid')
-          if [ -z "$ID" ]; then
-            $W d1 create grandma-wei
-            ID=$($W d1 list --json | jq -r '.[] | select(.name=="grandma-wei") | .uuid')
-          fi
-          sed -i "s/00000000-0000-0000-0000-000000000000/$ID/" wrangler.toml
-          $W d1 migrations apply grandma-wei --remote
       - name: Set secrets
         if: steps.creds.outputs.ok == 'true'
         working-directory: apps/web

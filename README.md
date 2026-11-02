@@ -2,6 +2,8 @@
 
 **Take a photo of your room. Grandma Wei reads its feng shui, scores it, and tells you, lovingly but without mercy, what to fix.**
 
+**Live at [grandma-wei.pages.dev](https://grandma-wei.pages.dev)**
+
 `feng-shui` · `rust` · `webassembly` · `claude` · `cloudflare-pages` · `bun` · `react` · `game`
 
 ![Grandma Wei's home page](docs/screens/home.jpg)
@@ -60,7 +62,7 @@ flowchart TB
     direction TB
     API["Hono API<br/>packages/server"]
     QiEdge["qi.wasm (Rust)<br/>the real score"]
-    D1[("D1<br/>shares, text only<br/>rate limits")]
+    Store[("Workers KV<br/>shares, text only<br/>rate limits")]
     Share["/s/:id<br/>share page + OpenGraph"]
     OG["/og/score.png<br/>one per score, pre-rendered"]
   end
@@ -75,8 +77,8 @@ flowchart TB
   Fridge --> QiWeb --> Sketch
   Fridge --> Card
   Fridge -- "POST /api/share" --> API
-  API --> D1
-  D1 --> Share
+  API --> Store
+  Store --> Share
   Share -. "link preview" .-> OG
 ```
 
@@ -132,7 +134,7 @@ flowchart LR
 | `packages/voice` | Grandma's hand-written lines, the personalization prompt, and the voice linter |
 | `packages/server` | The API: vision, scoring, voice, signing, shares, rate limits, share-page tags |
 | `packages/card` | One SVG template for the post, story and link-preview images, wrapped with real font metrics and rendered by resvg |
-| `apps/web` | The site, Pages Functions, D1 migrations, and the end-to-end tests |
+| `apps/web` | The site, Pages Functions, storage config (KV, or D1 via `migrations/`), and the end-to-end tests |
 | `fixtures/rooms` | The practice rooms: Unsplash photos with hand-written scenes |
 | `scripts` | The font pipeline and the link-preview pre-renderer |
 
@@ -145,7 +147,6 @@ bun install
 bun run qi                                  # Rust → WebAssembly
 bun run --cwd apps/web build                # link previews + site
 cd apps/web
-./node_modules/.bin/wrangler d1 migrations apply grandma-wei --local
 ./node_modules/.bin/wrangler pages dev dist # http://localhost:8788
 ```
 
@@ -160,18 +161,18 @@ bun run typecheck
 cd apps/web && ./node_modules/.bin/playwright test   # phone, tablet, desktop
 ```
 
-The end-to-end suite runs the real site and functions with a local D1 and a test-only stand-in for Grandma's eyes, so the whole photo, retake and fridge loop is tested without an API key.
+The end-to-end suite runs the real site and functions with local KV storage and a test-only stand-in for Grandma's eyes, so the whole photo, retake and fridge loop is tested without an API key.
 
 ## Deploy
 
-Merges to `main` deploy to **grandma-wei.pages.dev** through `.github/workflows/deploy.yml`. On its first run it creates the Pages project and the D1 database, applies migrations, and sets secrets. It needs these repository secrets:
+Merges to `main` deploy to **grandma-wei.pages.dev** through `.github/workflows/deploy.yml`. It creates the Pages project if needed and sets secrets. Shares and rate limits live in the Workers KV namespace named in `apps/web/wrangler.toml`. It needs these repository secrets:
 
 | Secret | Needed for |
 | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Deploying (Pages and D1 edit permissions) |
+| `CLOUDFLARE_API_TOKEN` | Deploying (Pages and Workers KV edit permissions) |
 | `CLOUDFLARE_ACCOUNT_ID` | Deploying |
 | `ANTHROPIC_API_KEY` | Real photo readings; without it the site runs practice rooms only |
-| `SIGNING_SECRET` | Optional; otherwise derived from the API key |
+| `SIGNING_SECRET` | Optional; the live project already has one |
 
 ## Credits
 
