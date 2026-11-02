@@ -33,15 +33,15 @@ export const SIZES: Record<CardFormat, { w: number; h: number }> = {
 };
 
 const C = {
-  paper: "#F3EDE2",
-  paper2: "#EBE3D4",
-  ink: "#1E1A16",
-  soft: "#5A5148",
-  muted: "#8C8173",
-  seal: "#C23A22",
+  paper: "#F4F2ED",
+  paper2: "#EAE8E2",
+  ink: "#1C1B19",
+  soft: "#57554F",
+  muted: "#8A8780",
+  seal: "#B3272D",
   jade: "#2E6A58",
-  brass: "#B4873A",
-  line: "#D9CFBE",
+  brass: "#4F6B8A",
+  line: "#D7D4CC",
 };
 
 const PILLARS = [
@@ -102,7 +102,7 @@ function text(x: number, y: number, s: string, face: Face, size: number, fill: s
 }
 
 function mono(x: number, y: number, s: string, size: number, fill = C.muted, anchor = "start"): string {
-  return text(x, y, s.toUpperCase(), "GeistMono-Regular", size, fill, `letter-spacing="${(size * 0.1).toFixed(1)}" text-anchor="${anchor}"`);
+  return text(x, y, s, "GeistMono-Regular", size * 1.1, fill, `text-anchor="${anchor}"`);
 }
 
 function seal(x: number, y: number, size: number, rotate = 8): string {
@@ -145,7 +145,7 @@ function defs(w: number, h: number): string {
     </filter>
     <filter id="grain" x="0" y="0" width="100%" height="100%">
       <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7" stitchTiles="stitch"/>
-      <feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.38  0 0 0 0 0.28  0 0 0 0.10 0"/>
+      <feColorMatrix values="0 0 0 0 0.42  0 0 0 0 0.42  0 0 0 0 0.42  0 0 0 0.10 0"/>
     </filter>
   </defs>
   <rect width="${w}" height="${h}" fill="${C.paper}"/>
@@ -156,7 +156,7 @@ let grainOn = false;
 
 /** A cheap stand-in for grain: a faint vignette of warmer paper at the edges. */
 function paperEdges(w: number, h: number): string {
-  return `<radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="70%" stop-color="${C.paper}" stop-opacity="0"/><stop offset="100%" stop-color="#E2D6C2" stop-opacity="0.9"/></radialGradient>
+  return `<radialGradient id="vig" cx="50%" cy="45%" r="75%"><stop offset="70%" stop-color="${C.paper}" stop-opacity="0"/><stop offset="100%" stop-color="#DEDBD3" stop-opacity="0.9"/></radialGradient>
   <rect width="${w}" height="${h}" fill="url(#vig)"/>`;
 }
 
@@ -231,7 +231,7 @@ function tall(d: CardData, format: "post" | "story", host: string): string {
   lines.forEach((l, i) => out.push(text(pad + 34, y + i * hs * 1.2, l, "Newsreader-Regular", hs, C.ink)));
   const blockH = (lines.length - 1) * hs * 1.2 + hs * 0.35;
   out.push(`<rect x="${pad}" y="${y - hs * 0.9}" width="4" height="${blockH + hs * 0.9 + 52}" fill="${C.seal}"/>`);
-  out.push(mono(pad + 34, y + blockH + 40, "— Grandma Wei", 20));
+  out.push(text(pad + 34, y + blockH + 40, "Grandma Wei", "Newsreader-Italic", 24, C.soft));
   y += blockH + (story ? 140 : 110);
 
   // Pillars.
@@ -280,7 +280,7 @@ function wide(d: CardData, host: string): string {
   const lines = wrap(d.headline || "She read this room. She has notes.", "Newsreader-Regular", 44, w - col - pad, 5);
   const startY = 110 + (330 - lines.length * 54) / 2 + 36;
   lines.forEach((l, i) => out.push(text(col, startY + i * 54, l, "Newsreader-Regular", 44, C.ink)));
-  out.push(mono(col, startY + lines.length * 54 + 16, "— Grandma Wei", 18));
+  out.push(text(col, startY + lines.length * 54 + 16, "Grandma Wei", "Newsreader-Italic", 22, C.soft));
   out.push(`<line x1="${pad}" y1="${h - 96}" x2="${w - pad}" y2="${h - 96}" stroke="${C.line}" stroke-width="2"/>`);
   out.push(mono(pad, h - 52, host, 20, C.seal));
   out.push(mono(w - pad, h - 52, d.kind === "room" ? "show her your room →" : `${roomLabel(d.kind)} · show her your room →`, 20, C.muted, "end"));

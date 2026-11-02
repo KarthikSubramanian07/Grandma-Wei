@@ -4,8 +4,8 @@ import { qi } from "../lib/qi";
 
 const GW = 48;
 const GH = 40;
-const INK = "30,26,22";
-const RED = "194,58,34";
+const INK = "28,27,25";
+const RED = "179,39,45";
 
 type Piece = Layout["pieces"][number];
 
@@ -226,7 +226,7 @@ function drawRoom(
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   const X = (v: number) => room.x + v * room.w;
   const Y = (v: number) => room.y + v * room.h;
-  const ink = "#1E1A16";
+  const ink = "#1C1B19";
   const font = (size: number) => `500 ${size}px "Geist Mono", ui-monospace, monospace`;
   const jitter = (seed: number) => Math.sin(seed * 999.7) * 0.8;
 
@@ -301,7 +301,7 @@ function drawRoom(
   }
 
   // Labels for door and windows.
-  g.fillStyle = "#8C8173";
+  g.fillStyle = "#8A8780";
   g.font = font(9.5);
   g.textAlign = "center";
   const label = (wall: Wall, at: number, text: string) => {
@@ -335,7 +335,7 @@ function drawRoom(
     g.setLineDash([6, 5]);
     drawPiece(g, suggestion, X, Y, room, true);
     g.setLineDash([]);
-    g.fillStyle = "#C23A22";
+    g.fillStyle = "#B3272D";
     g.font = `700 ${Math.max(15, room.w * 0.035)}px "Kalam", cursive`;
     g.textAlign = "center";
     g.fillText("here.", X(suggestion.x + suggestion.w / 2), Y(suggestion.y + suggestion.h / 2) + 5);
@@ -355,9 +355,9 @@ function drawPiece(
   const y = Y(p.y);
   const w = p.w * room.w;
   const h = p.h * room.h;
-  const ink = ghost ? "#C23A22" : "#1E1A16";
+  const ink = ghost ? "#B3272D" : "#1C1B19";
   if (p.kind === "rug") {
-    g.strokeStyle = "rgba(30,26,22,.35)";
+    g.strokeStyle = "rgba(28,27,25,.35)";
     g.lineWidth = 1;
     g.setLineDash([2, 3]);
     g.strokeRect(x, y, w, h);
@@ -366,7 +366,7 @@ function drawPiece(
   }
   if (p.kind === "clutter") {
     // A scribble.
-    g.strokeStyle = "rgba(194,58,34,.85)";
+    g.strokeStyle = "rgba(179,39,45,.85)";
     g.lineWidth = 1.4;
     g.beginPath();
     for (let i = 0; i < 14; i++) {
@@ -380,7 +380,7 @@ function drawPiece(
     g.stroke();
     return;
   }
-  g.fillStyle = ghost ? "rgba(194,58,34,.06)" : p.kind === "plant" ? "rgba(46,106,88,.85)" : "#EBE3D4";
+  g.fillStyle = ghost ? "rgba(179,39,45,.06)" : p.kind === "plant" ? "rgba(46,106,88,.85)" : "#EAE8E2";
   g.strokeStyle = ink;
   g.lineWidth = ghost ? 1.8 : 1.8;
   if (p.kind === "plant") {
@@ -414,14 +414,14 @@ function drawPiece(
       g.roundRect?.(px, py, pww, phh, 3);
       if (!g.roundRect) g.rect(px, py, pww, phh);
       if (!ghost) {
-        g.fillStyle = "#F3EDE2";
+        g.fillStyle = "#F4F2ED";
         g.fill();
       }
       g.stroke();
     }
   }
   if (!ghost && w > 34 && h > 16 && p.kind !== "bed") {
-    g.fillStyle = "#8C8173";
+    g.fillStyle = "#8A8780";
     g.font = `500 8.5px "Geist Mono", monospace`;
     g.textAlign = "center";
     g.fillText(p.kind.toUpperCase(), x + w / 2, y + h / 2 + 3);

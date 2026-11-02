@@ -50,13 +50,13 @@ function sealSvg(size: number, bg: string | null): string {
   const gy = pad + (box - SEAL_ASCENT * scale) / 2 + box * 0.02;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${
     bg ? `<rect width="${size}" height="${size}" fill="${bg}"/>` : ""
-  }<rect x="${pad}" y="${pad}" width="${box}" height="${box}" rx="${box * 0.12}" fill="#C23A22"/><rect x="${pad + box * 0.07}" y="${pad + box * 0.07}" width="${box * 0.86}" height="${box * 0.86}" rx="${box * 0.05}" fill="none" stroke="#F3EDE2" stroke-width="${box * 0.03}"/><path transform="translate(${gx.toFixed(2)} ${gy.toFixed(2)}) scale(${scale.toFixed(5)})" d="${SEAL_PATH}" fill="#F3EDE2"/></svg>`;
+  }<rect x="${pad}" y="${pad}" width="${box}" height="${box}" rx="${box * 0.12}" fill="#B3272D"/><rect x="${pad + box * 0.07}" y="${pad + box * 0.07}" width="${box * 0.86}" height="${box * 0.86}" rx="${box * 0.05}" fill="none" stroke="#F4F2ED" stroke-width="${box * 0.03}"/><path transform="translate(${gx.toFixed(2)} ${gy.toFixed(2)}) scale(${scale.toFixed(5)})" d="${SEAL_PATH}" fill="#F4F2ED"/></svg>`;
 }
 const pub = join(root, "apps/web/public");
 writeFileSync(join(pub, "favicon.svg"), sealSvg(64, null));
-writeFileSync(join(pub, "apple-touch-icon.png"), await renderPng(sealSvg(180, "#171310"), fonts));
-writeFileSync(join(pub, "icon-192.png"), await renderPng(sealSvg(192, "#171310"), fonts));
-writeFileSync(join(pub, "icon-512.png"), await renderPng(sealSvg(512, "#171310"), fonts));
+writeFileSync(join(pub, "apple-touch-icon.png"), await renderPng(sealSvg(180, "#121314"), fonts));
+writeFileSync(join(pub, "icon-192.png"), await renderPng(sealSvg(192, "#121314"), fonts));
+writeFileSync(join(pub, "icon-512.png"), await renderPng(sealSvg(512, "#121314"), fonts));
 
 const t = performance.now();
 for (const [name, data] of jobs) writeFileSync(join(out, `${name}.png`), await renderPng(cardSvg(data, "og"), fonts));

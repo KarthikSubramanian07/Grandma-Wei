@@ -84,7 +84,7 @@ export function Scorecard({ result, imagined, done, onToggle, stampKey }: Props)
 
       <blockquote className="sc-verdict">
         <p>{voice.headline}</p>
-        <footer className="mono">— Grandma Wei</footer>
+        <footer>Grandma Wei</footer>
         {why && reading.state === "ok" && (
           <details className="sc-why">
             <summary>Why she's right</summary>
