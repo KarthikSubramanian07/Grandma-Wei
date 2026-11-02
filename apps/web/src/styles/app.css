@@ -415,3 +415,46 @@ a {
     transform: translateY(-8px) scaleY(1.1);
   }
 }
+
+/* Pre-rendered page content, for crawlers and visitors without JavaScript.
+   With JavaScript on, the app replaces it; boot.js hides it until then. */
+.js #prerender {
+  display: none;
+}
+.prerender {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 32px var(--gutter) 64px;
+  color: var(--on-table);
+}
+.prerender h1 {
+  font-size: clamp(40px, 7vw, 68px);
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 18px;
+}
+.prerender h2 {
+  font-size: 26px;
+  font-weight: 400;
+  margin: 32px 0 10px;
+}
+.prerender p,
+.prerender li {
+  color: var(--on-table-soft);
+  margin-bottom: 10px;
+}
+.prerender strong {
+  color: var(--on-table);
+  font-weight: 500;
+}
+.prerender ul,
+.prerender ol {
+  padding-left: 1.2em;
+}
+.prerender blockquote {
+  border-left: 2px solid var(--seal);
+  padding-left: 16px;
+  font-style: italic;
+  margin: 12px 0;
+}

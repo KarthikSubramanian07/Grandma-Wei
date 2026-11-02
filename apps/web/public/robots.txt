@@ -1,6 +1,9 @@
 User-agent: *
 Allow: /
+Allow: /api/sample/
+Allow: /api/health
 Disallow: /api/
 Disallow: /s/
+Disallow: /shell
 
 Sitemap: https://grandma-wei.pages.dev/sitemap.xml

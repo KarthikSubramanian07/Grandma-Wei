@@ -6,22 +6,25 @@
     <meta name="theme-color" content="#121314" />
     <meta name="color-scheme" content="dark light" />
     <!--meta:start-->
-    <title>Grandma Wei · Show her your room</title>
-    <meta name="description" content="Take a photo of your room. Grandma Wei reads its feng shui, gives it a score, and tells you, lovingly but without mercy, what to fix." />
+    <title>Grandma Wei · AI feng shui reading for your room, from one photo</title>
+    <meta name="description" content="Take a photo of your room. Grandma Wei reads its feng shui, gives it a score out of 100, and tells you, lovingly but without mercy, what to fix." />
     <link rel="canonical" href="https://grandma-wei.pages.dev/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Grandma Wei" />
-    <meta property="og:title" content="Grandma Wei · Show her your room" />
+    <meta property="og:title" content="Grandma Wei · AI feng shui reading for your room, from one photo" />
     <meta property="og:description" content="Take a photo of your room. Grandma Wei reads its feng shui, scores it, and tells you, lovingly, what to fix." />
     <meta property="og:url" content="https://grandma-wei.pages.dev/" />
     <meta property="og:image" content="https://grandma-wei.pages.dev/og/site.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Grandma Wei · Show her your room" />
+    <meta name="twitter:title" content="Grandma Wei · AI feng shui reading for your room, from one photo" />
     <meta name="twitter:description" content="She reads your room's feng shui and tells you, lovingly, what to fix." />
     <meta name="twitter:image" content="https://grandma-wei.pages.dev/og/site.png" />
     <!--meta:end-->
+    <meta name="keywords" content="feng shui, AI feng shui, feng shui room reader, room feng shui score, bedroom feng shui, bed placement, commanding position, room layout" />
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
+    <script src="/boot.js"></script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -30,25 +33,48 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Grandma Wei",
-        "url": "https://grandma-wei.pages.dev/",
-        "applicationCategory": "LifestyleApplication",
-        "operatingSystem": "Any",
-        "description": "Take a photo of your room. Grandma Wei reads its feng shui, scores it, and tells you what to fix.",
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://grandma-wei.pages.dev/#organization",
+            "name": "Grandma Wei",
+            "url": "https://grandma-wei.pages.dev/",
+            "logo": "https://grandma-wei.pages.dev/icon-512.png",
+            "description": "A free, open-source feng shui room reader with the voice of a loving, blunt grandmother.",
+            "founder": { "@type": "Person", "name": "Karthik Subramanian" },
+            "knowsAbout": ["feng shui", "room layout", "bed placement", "bedroom feng shui", "home office layout", "decluttering"],
+            "sameAs": ["https://github.com/KarthikSubramanian07/Grandma-Wei"],
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer support",
+              "url": "https://grandma-wei.pages.dev/contact",
+              "availableLanguage": "English"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://grandma-wei.pages.dev/#website",
+            "name": "Grandma Wei",
+            "url": "https://grandma-wei.pages.dev/",
+            "publisher": { "@id": "https://grandma-wei.pages.dev/#organization" }
+          },
+          {
+            "@type": "WebApplication",
+            "name": "Grandma Wei",
+            "url": "https://grandma-wei.pages.dev/",
+            "applicationCategory": "LifestyleApplication",
+            "operatingSystem": "Any",
+            "description": "Take a photo of your room. Grandma Wei reads its feng shui, scores it out of 100, and tells you what to fix.",
+            "keywords": "feng shui, AI feng shui, feng shui room reader, room feng shui score, bedroom feng shui, bed placement",
+            "publisher": { "@id": "https://grandma-wei.pages.dev/#organization" },
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+          }
+        ]
       }
     </script>
   </head>
   <body>
     <div id="root"></div>
-    <noscript>
-      <main style="font-family: Georgia, serif; max-width: 34rem; margin: 4rem auto; padding: 0 1.5rem; color: #F4F2ED">
-        <h1>Grandma Wei</h1>
-        <p>Take a photo of your room. Grandma Wei reads its feng shui, gives it a score, and tells you what to fix.</p>
-        <p>She needs JavaScript turned on to see your room.</p>
-      </main>
-    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
