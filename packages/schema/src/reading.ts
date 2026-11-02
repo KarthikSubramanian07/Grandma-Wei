@@ -112,10 +112,20 @@ export const EFFORT_LABEL: Record<Effort, string> = {
   a_weekend: "A weekend",
 };
 
+/** Plain-language names for the five pillars (internal ids stay feng shui terms). */
 export const PILLAR_LABEL: Record<Pillar, string> = {
-  command: "Command",
-  flow: "Flow",
-  rest: "Rest",
+  command: "Position",
+  flow: "Space",
+  rest: "Sleep",
   light: "Light",
   balance: "Balance",
+};
+
+/** One line on what each pillar checks, for people who've never heard of feng shui. */
+export const PILLAR_HINT: Record<Pillar, string> = {
+  command: "Can you see the door from your bed and desk?",
+  flow: "Can you walk in and move around without stepping over things?",
+  rest: "Is the bed a calm place, without mirrors, screens or beams?",
+  light: "Daylight in the day, warm lamps at night.",
+  balance: "A mix of materials, colors and something alive.",
 };
