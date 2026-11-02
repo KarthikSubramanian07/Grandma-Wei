@@ -12,7 +12,7 @@ interface Env {
  */
 export const onRequestGet: PagesFunction<Env, "id"> = async ({ params, env, request }) => {
   const url = new URL(request.url);
-  const shell = await env.ASSETS.fetch(new URL("/", url));
+  const shell = await env.ASSETS.fetch(new URL("/shell", url));
   let html = await shell.text();
   const id = String(params.id ?? "");
   const store = storeFromEnv(env);
