@@ -100,6 +100,15 @@ export function Grandma({ mood = "thinking", size = 160, className = "", title }
         <circle cx="100" cy="227" r="2.6" fill="#F4F2ED" strokeWidth="1.6" />
         <path d="M60 196 C64 206 66 218 66 232 M140 196 C136 206 134 218 134 232" strokeWidth="1.6" opacity="0.7" />
 
+        {/* her tea: she always offers */}
+        <g className="tea">
+          <path className="steam s1" d="M138 186 c-4 -6 4 -9 0 -15 c-4 -6 4 -9 0 -14" strokeWidth="1.6" opacity="0.55" />
+          <path className="steam s2" d="M148 188 c-4 -6 4 -9 0 -15 c-4 -6 4 -9 0 -14" strokeWidth="1.6" opacity="0.45" />
+          <path d="M128 196 h30 v18 c0 8 -6 13 -15 13 c-9 0 -15 -5 -15 -13 Z" fill="#F4F2ED" />
+          <path d="M128 203 h30" stroke="#B3272D" strokeWidth="3" />
+          <path d="M158 201 c8 0 9 11 0 12" />
+          <path d="M120 218 c4 -6 10 -7 14 -4 M121 224 c4 -5 9 -6 13 -3" fill="#F5EEE6" strokeWidth="2" />
+        </g>
         <g transform={`rotate(${f.tilt} 100 120)`} style={{ transition: "transform .5s var(--ease-out)" }}>
           {/* neck and face */}
           <path d="M88 160 L88 174 M112 160 L112 174" />
