@@ -12,9 +12,8 @@ VOICE_EFFORT = "low"
 READS_PER_HOUR = "12"
 READS_PER_DAY = "400"
 
-# The deploy workflow fills in database_id for the real database.
-[[d1_databases]]
-binding = "DB"
-database_name = "grandma-wei"
-database_id = "00000000-0000-0000-0000-000000000000"
-migrations_dir = "migrations"
+# Shares (text only) and rate-limit counters. D1 also works: bind it as DB
+# (see migrations/) and it takes precedence over KV.
+[[kv_namespaces]]
+binding = "KV"
+id = "0aad5fb329ee48b79e43ca1b58ab70e6"

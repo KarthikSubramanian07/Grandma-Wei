@@ -8,7 +8,7 @@ import { checkLimit } from "./limit";
 import { type Envelope, type ReadingResult, type Signed, sharePayload } from "./result";
 import { SAMPLES } from "./samples";
 import { randomId, sha256, sign, verify } from "./sign";
-import { D1Store, type Store } from "./store";
+import { storeFromEnv, type Store } from "./store";
 import { personalize } from "./tongue";
 
 export interface Env {
@@ -29,6 +29,7 @@ export interface Env {
    */
   FAKE_EYES?: string;
   DB?: D1Database;
+  KV?: KVNamespace;
 }
 
 export interface Deps {
@@ -101,8 +102,7 @@ export function createApp(deps: Deps = {}) {
   const eyes = deps.eyes ?? look;
   const tongue = deps.tongue ?? personalize;
   const app = new Hono<{ Bindings: Env }>();
-  const storeFor = (env: Env): Store | null =>
-    deps.store !== undefined ? deps.store : env.DB ? new D1Store(env.DB) : null;
+  const storeFor = (env: Env): Store | null => (deps.store !== undefined ? deps.store : storeFromEnv(env));
 
   app.use("*", async (c, next) => {
     await next();

@@ -30,7 +30,7 @@ export function Privacy() {
         </li>
         <li>
           <strong>Sharing is text only, and undoable.</strong> A shared link shows the scorecard (score, her words, the chores),
-          never the photo. Deleting the reading from your fridge deletes the link too.
+          never the photo. Deleting the reading from your fridge deletes the link too, and links expire on their own after a year.
         </li>
         <li>
           <strong>No ads, no trackers, no accounts.</strong> We count how many readings happen per hour to stop abuse, using a

@@ -1,7 +1,8 @@
-import { D1Store, shareMeta, type SharePayload } from "@gw/server";
+import { shareMeta, storeFromEnv, type SharePayload } from "@gw/server";
 
 interface Env {
   DB?: D1Database;
+  KV?: KVNamespace;
   ASSETS: Fetcher;
 }
 
@@ -14,7 +15,8 @@ export const onRequestGet: PagesFunction<Env, "id"> = async ({ params, env, requ
   const shell = await env.ASSETS.fetch(new URL("/", url));
   let html = await shell.text();
   const id = String(params.id ?? "");
-  const row = env.DB && /^[A-Za-z0-9_-]{6,32}$/.test(id) ? await new D1Store(env.DB).getShare(id) : null;
+  const store = storeFromEnv(env);
+  const row = store && /^[A-Za-z0-9_-]{6,32}$/.test(id) ? await store.getShare(id) : null;
   if (row) {
     const { tags } = shareMeta(JSON.parse(row.payload) as SharePayload, url.origin);
     html = html.replace(/<!--meta:start-->[\s\S]*?<!--meta:end-->/, tags);
