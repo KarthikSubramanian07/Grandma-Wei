@@ -77,6 +77,28 @@ test.describe("your own photo", () => {
     await expect(page.locator(".ba")).toBeVisible();
   });
 
+  test("on a phone, the in-app camera takes the photo", async ({ page }) => {
+    test.skip(test.info().project.name === "desktop", "touch devices open the camera from the main button");
+    await page.goto("/");
+    await page.locator(".hero .picker .btn").first().click();
+    const camera = page.getByRole("dialog", { name: "Take a photo of your room" });
+    await expect(camera).toBeVisible();
+    await expect(camera.getByRole("button", { name: "Take the photo" })).toBeEnabled({ timeout: 10_000 });
+    await camera.getByRole("button", { name: "Take the photo" }).click();
+    await expect(page).toHaveURL(/\/visit\//, { timeout: 20_000 });
+    await expect(page.locator(".sc-score .display")).toHaveText("49");
+  });
+
+  test("the camera closes cleanly and offers the photo library", async ({ page }) => {
+    test.skip(test.info().project.name === "desktop", "touch only");
+    await page.goto("/");
+    await page.locator(".hero .picker .btn").first().click();
+    const camera = page.getByRole("dialog", { name: "Take a photo of your room" });
+    await expect(camera.getByRole("button", { name: "Photos" })).toBeVisible();
+    await camera.getByRole("button", { name: "Close the camera" }).click();
+    await expect(camera).toBeHidden();
+  });
+
   test("a file that isn't an image gets a kind message, not a crash", async ({ page }) => {
     await page.goto("/");
     await page.locator('.hero input[type=file]:not([capture])').setInputFiles({
