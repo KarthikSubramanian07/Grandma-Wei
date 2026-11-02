@@ -44,20 +44,80 @@ No photo handy? Three practice rooms work with no setup at all.
 
 ## Architecture
 
+```mermaid
+flowchart LR
+  subgraph Browser["Your browser"]
+    direction TB
+    Photo["Photo<br/>resized + re-encoded<br/>(location data stripped)"]
+    QiWeb["qi.wasm (Rust)<br/>what-if scoring<br/>qi flow field"]
+    Sketch["Room sketch<br/>ink particles"]
+    Fridge[("Fridge<br/>IndexedDB<br/>readings, photos, magnets")]
+    Card["resvg.wasm<br/>post + story images"]
+  end
+
+  subgraph Pages["Cloudflare Pages"]
+    direction TB
+    API["Hono API<br/>packages/server"]
+    QiEdge["qi.wasm (Rust)<br/>the real score"]
+    D1[("D1<br/>shares, text only<br/>rate limits")]
+    Share["/s/:id<br/>share page + OpenGraph"]
+    OG["/og/&lt;score&gt;.png<br/>pre-rendered at build"]
+  end
+
+  Claude["Claude API<br/>vision + voice"]
+
+  Photo -- "POST /api/read" --> API
+  API -- "photo, once" --> Claude
+  Claude -- "Scene JSON + her lines" --> API
+  API --> QiEdge
+  API -- "signed reading" --> Fridge
+  Fridge --> QiWeb --> Sketch
+  Fridge --> Card
+  Fridge -- "POST /api/share" --> API
+  API --> D1
+  D1 --> Share
+  Share -. "link preview" .-> OG
 ```
- Browser (React 19, Vite, Bun)                         Cloudflare Pages
- ┌──────────────────────────────────┐                  ┌──────────────────────────────────────┐
- │ photo → resize + re-encode       │  POST /api/read  │ Hono app (packages/server)           │
- │                                  │ ───────────────▶ │  1. Claude vision → Scene JSON       │
- │ qi.wasm (Rust)                   │                  │     (strict schema, discrete facts)  │
- │  · what-if re-scoring            │                  │  2. qi.wasm → score, chores, diff    │
- │  · qi flow field → ink particles │ ◀─────────────── │  3. Claude → her lines, linted       │
- │                                  │  signed reading  │  4. HMAC-sign the reading            │
- │ IndexedDB: the fridge            │                  │                                      │
- │ resvg.wasm: saved images         │  POST /api/share │ D1: shares (text only), rate limits  │
- └──────────────────────────────────┘ ───────────────▶ │ /s/:id → page with OpenGraph tags    │
-                                                       │ /og/<score>.png → built ahead of time│
-                                                       └──────────────────────────────────────┘
+
+### One reading, step by step
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor You
+  participant B as Browser
+  participant S as Pages API
+  participant E as Claude (eyes)
+  participant Q as qi engine (Rust)
+  participant V as Claude (voice)
+
+  You->>B: Take a photo
+  B->>B: Resize, re-encode, strip metadata
+  B->>S: POST /api/read (photo + last reading, signed)
+  S->>E: What's in this room? (strict JSON schema)
+  E-->>S: Scene: discrete facts, items, rough floor plan
+  S->>Q: Score it
+  Q-->>S: Score, pillars, chores and points, diff, magnets
+  S->>S: Draft her lines from the hand-written bank
+  S->>V: Make these specific to this room
+  V-->>S: Rewritten lines
+  S->>S: Lint every line, keep only clean ones, sign
+  S-->>B: Reading (photo never stored)
+  B->>B: Stamp the score, tape the notes, save to the fridge
+  B-->>You: 49/100. "Your bed is in the coffin position."
+```
+
+### The loop
+
+```mermaid
+flowchart LR
+  A["Show her<br/>a photo"] --> B["Her verdict<br/>score + notes + chores"]
+  B --> C["Tick chores<br/>see the new score"]
+  C --> D["Move the bed,<br/>clear the floor"]
+  D --> E["Show her again"]
+  E --> F["Score climbs<br/>magnets on the fridge"]
+  F --> G["Save or share<br/>the scorecard"]
+  F -- "still not 100" --> C
 ```
 
 **Why the score is fair.** The model only *describes* the room, in fixed categories ("the bed is in line with the door", "the floor has some clutter"). A deterministic Rust engine turns that description into the score. The same room always gets the same number, moving the bed changes it for a reason you can see, and chore points are computed by re-scoring, so `49 + 34` really is `83`. Deal-breakers cap the score: a bed in the coffin position holds a room at 49 until it moves.
