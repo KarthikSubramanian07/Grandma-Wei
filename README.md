@@ -1,1 +1,117 @@
-# Grandma-Wei
+# Grandma Wei
+
+**Take a photo of your room. Grandma Wei reads its feng shui, scores it, and tells you, lovingly but without mercy, what to fix.**
+
+`feng-shui` · `rust` · `webassembly` · `claude` · `cloudflare-pages` · `bun` · `react` · `game`
+
+![Grandma Wei's home page](docs/screens/home.jpg)
+
+Everyone has a grandmother who walks into your place and immediately starts moving things. This is her. She's warm, opinionated, a little disappointed in you, and always right. You show her your room; she stamps a score on it, tapes notes to the offending furniture, and hands you a short list of chores. Then you move the bed, take another photo, and watch the number climb.
+
+> "Your bed is in the coffin position. I'm not angry. I'm worried."
+
+## How it plays
+
+1. **Show her.** One photo of your bedroom or office. On a phone the button opens the camera.
+2. **Get her verdict.** A score out of 100, her grade, a headline worth screenshotting, notes on the photo, and the top three chores with exactly how many points each is worth.
+3. **Imagine it.** Tick a chore and she re-scores the room on the spot. Flip to *How energy moves* and watch ink particles flow from the door through a sketch of your room, getting stuck where the clutter is.
+4. **Fix it and show her again.** The retake shows the change, her reaction, and the magnets you earned for the fridge, with a before-and-after slider.
+5. **Share it.** Save a post or story image, or send a link that unfurls with her verdict. Shares never include your photo.
+
+No photo handy? Three practice rooms work with no setup at all.
+
+<p align="center">
+  <img src="docs/screens/phone.jpg" width="300" alt="A reading on a phone: 49 out of 100, Worrying, with the verdict and first chore">
+  <img src="docs/screens/story.jpg" width="300" alt="The saved story image">
+</p>
+
+![A reading on desktop, with notes on the photo and the scorecard](docs/screens/reading.jpg)
+
+## Her personality, and her limits
+
+- **The humor is about your room, never about her culture.** No accents, no fortune cookies, no "ancient secrets". She talks like your sharpest relative. A linter in `packages/voice` rejects stereotypes, accent spellings, insults about people, profanity, and invented numbers, and every hand-written line in the bank passes it in CI.
+- **The advice is real.** She uses the practical side of feng shui, each rule paired with the everyday reason it helps: seeing the door from bed (designers call it prospect and refuge), screens away from the pillow, daylight, a clear way in.
+- **She won't guess.** If she can't see your door, the door rules are left out of the score and she asks for a better angle.
+- **She skips what a photo can't know.** No compass directions, no birth years.
+
+## Privacy
+
+- Your browser resizes the photo and re-encodes it, which strips location and camera data, before anything is sent.
+- The server passes it to Claude once, never stores it, and never logs request bodies.
+- Your readings, photos and magnets live in your browser (IndexedDB) and nowhere else.
+- Shared links contain the scorecard text only and are deleted when you delete the reading.
+- Rate limits use a salted hash, never an IP address.
+
+## Architecture
+
+```
+ Browser (React 19, Vite, Bun)                         Cloudflare Pages
+ ┌──────────────────────────────────┐                  ┌──────────────────────────────────────┐
+ │ photo → resize + re-encode       │  POST /api/read  │ Hono app (packages/server)           │
+ │                                  │ ───────────────▶ │  1. Claude vision → Scene JSON       │
+ │ qi.wasm (Rust)                   │                  │     (strict schema, discrete facts)  │
+ │  · what-if re-scoring            │                  │  2. qi.wasm → score, chores, diff    │
+ │  · qi flow field → ink particles │ ◀─────────────── │  3. Claude → her lines, linted       │
+ │                                  │  signed reading  │  4. HMAC-sign the reading            │
+ │ IndexedDB: the fridge            │                  │                                      │
+ │ resvg.wasm: saved images         │  POST /api/share │ D1: shares (text only), rate limits  │
+ └──────────────────────────────────┘ ───────────────▶ │ /s/:id → page with OpenGraph tags    │
+                                                       │ /og/<score>.png → built ahead of time│
+                                                       └──────────────────────────────────────┘
+```
+
+**Why the score is fair.** The model only *describes* the room, in fixed categories ("the bed is in line with the door", "the floor has some clutter"). A deterministic Rust engine turns that description into the score. The same room always gets the same number, moving the bed changes it for a reason you can see, and chore points are computed by re-scoring, so `49 + 34` really is `83`. Deal-breakers cap the score: a bed in the coffin position holds a room at 49 until it moves.
+
+| Path | What's there |
+| --- | --- |
+| `crates/qi` | The rules engine in Rust, compiled to WebAssembly: 18 rules over five pillars, deal-breaker caps, chores and their points, before/after diffs and magnets, a Laplace-solved qi flow field, and a solver that suggests where the bed should go |
+| `packages/schema` | The room description schema (Zod), which doubles as Claude's structured-output schema, and the engine's types |
+| `packages/voice` | Grandma's hand-written lines, the personalization prompt, and the voice linter |
+| `packages/server` | The API: vision, scoring, voice, signing, shares, rate limits, share-page tags |
+| `packages/card` | One SVG template for the post, story and link-preview images, wrapped with real font metrics and rendered by resvg |
+| `apps/web` | The site, Pages Functions, D1 migrations, and the end-to-end tests |
+| `fixtures/rooms` | The practice rooms: Unsplash photos with hand-written scenes |
+| `scripts` | The font pipeline and the link-preview pre-renderer |
+
+## Run it
+
+You need [Bun](https://bun.sh), Rust with the `wasm32-unknown-unknown` target, and [wasm-pack](https://github.com/wasm-bindgen/wasm-pack).
+
+```sh
+bun install
+bun run qi                                  # Rust → WebAssembly
+bun run --cwd apps/web build                # link previews + site
+cd apps/web
+./node_modules/.bin/wrangler d1 migrations apply grandma-wei --local
+./node_modules/.bin/wrangler pages dev dist # http://localhost:8788
+```
+
+Practice rooms work right away. For real photo readings, put `ANTHROPIC_API_KEY=...` in `apps/web/.dev.vars`.
+
+## Test it
+
+```sh
+bun run test:rust                     # 38 engine tests
+bun test packages                     # schema, voice, server, card
+bun run typecheck
+cd apps/web && ./node_modules/.bin/playwright test   # phone, tablet, desktop
+```
+
+The end-to-end suite runs the real site and functions with a local D1 and a test-only stand-in for Grandma's eyes, so the whole photo, retake and fridge loop is tested without an API key.
+
+## Deploy
+
+Merges to `main` deploy to **grandma-wei.pages.dev** through `.github/workflows/deploy.yml`. On its first run it creates the Pages project and the D1 database, applies migrations, and sets secrets. It needs these repository secrets:
+
+| Secret | Needed for |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | Deploying (Pages and D1 edit permissions) |
+| `CLOUDFLARE_ACCOUNT_ID` | Deploying |
+| `ANTHROPIC_API_KEY` | Real photo readings; without it the site runs practice rooms only |
+| `SIGNING_SECRET` | Optional; otherwise derived from the API key |
+
+## Credits
+
+Practice room photos are from Unsplash ([credits](fixtures/rooms/CREDITS.md)). Fonts: Newsreader, Geist Mono and Kalam, all under the SIL Open Font License. Grandma's seal is the character 魏 (Wei), drawn from Noto Serif SC.
+
+Not affiliated with any real grandmother. MIT licensed.
