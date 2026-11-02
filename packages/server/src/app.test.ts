@@ -169,3 +169,25 @@ describe("share page meta", () => {
     expect(tags).toContain("noindex");
   });
 });
+
+describe("KV storage", () => {
+  test("shares round-trip through a KV namespace", async () => {
+    const { KVStore } = await import("./store");
+    const mem = new Map<string, string>();
+    const kv = {
+      get: async (k: string, type?: string) => {
+        const v = mem.get(k);
+        return v === undefined ? null : type === "json" ? JSON.parse(v) : v;
+      },
+      put: async (k: string, v: string) => void mem.set(k, v),
+      delete: async (k: string) => void mem.delete(k),
+    } as unknown as KVNamespace;
+    const store = new KVStore(kv);
+    expect(await store.bump("v:x", 1)).toBe(1);
+    expect(await store.bump("v:x", 1)).toBe(2);
+    await store.putShare("abc", "hash", '{"a":1}', 1);
+    expect(await store.getShare("abc")).toEqual({ payload: '{"a":1}', deleteHash: "hash" });
+    await store.deleteShare("abc");
+    expect(await store.getShare("abc")).toBeNull();
+  });
+});
