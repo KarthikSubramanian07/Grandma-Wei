@@ -24,7 +24,10 @@ export interface GroqRequest {
   maxTokens: number;
   temperature: number;
   timeoutMs: number;
+  /** On a 429 that clears within this long, wait and try once more. */
+  maxWaitMs?: number;
   fetch?: typeof fetch;
+  sleep?: (ms: number) => Promise<void>;
 }
 
 export class GroqError extends Error {
@@ -72,6 +75,13 @@ export async function groqJson(req: GroqRequest): Promise<unknown> {
 
   let res = await send(true);
   if (res.status === 400) res = await send(false);
+  if (res.status === 429) {
+    const wait = retryAfterMs(res);
+    if (wait !== null && wait <= (req.maxWaitMs ?? 0)) {
+      await (req.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms))))(wait);
+      res = await send(true);
+    }
+  }
   if (res.status === 429) throw new GroqError("busy", "rate limited upstream");
   if (!res.ok) throw new GroqError("upstream", `api error ${res.status}`);
 
@@ -89,4 +99,10 @@ export async function groqJson(req: GroqRequest): Promise<unknown> {
   } catch {
     throw new GroqError("unreadable", "not json");
   }
+}
+
+/** Groq says when to come back in a retry-after header (seconds). */
+export function retryAfterMs(res: Response): number | null {
+  const s = Number(res.headers.get("retry-after"));
+  return Number.isFinite(s) && s >= 0 && res.headers.has("retry-after") ? Math.ceil(s * 1000) : null;
 }

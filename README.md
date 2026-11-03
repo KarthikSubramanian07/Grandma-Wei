@@ -184,7 +184,7 @@ It deploys from your machine with your Cloudflare login (`wrangler login` once),
 | `ANTHROPIC_API_KEY` | Or Claude instead. If both are set, Claude wins unless `AI_PROVIDER=groq` |
 | `SIGNING_SECRET` | Signs readings so retakes and shares can't be forged; the live project has one |
 
-Without either API key the site runs practice rooms only. Set one with `apps/web/node_modules/.bin/wrangler pages secret put GROQ_API_KEY --project-name grandma-wei`.
+On Groq's free tier (about 1,000 output tokens a minute, and one reading uses most of it), she skips the second call that personalizes her lines and uses the hand-written ones, and the server waits out short rate limits once. Set the `GROQ_VOICE` variable to `1` to personalize on a paid tier. Without either API key the site runs practice rooms only. Set one with `apps/web/node_modules/.bin/wrangler pages secret put GROQ_API_KEY --project-name grandma-wei`.
 
 ## Credits
 
