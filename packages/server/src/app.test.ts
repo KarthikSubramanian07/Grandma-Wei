@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Scene } from "@gw/schema";
 import { brainFor } from "./app";
+import { EyesError } from "./eyes";
 import { createApp, initEngine, MemoryStore, type Envelope } from "./index";
 import { SAMPLES } from "./samples";
 
@@ -103,6 +104,30 @@ describe("choosing her eyes", () => {
     const withVoice = { ...groqEnv, GROQ_VOICE: "1" };
     expect((await a.request("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), withVoice)).status).toBe(200);
     expect(seen).toEqual(["eyes:groq:qwen/qwen3.8-27b:gsk_live", "voice:groq:qwen/qwen3.8-27b"]);
+  });
+});
+
+describe("when her eyes fail", () => {
+  test("each failure gets its own status and a message in her voice", async () => {
+    const cases: [EyesError["code"], number, string][] = [
+      ["busy", 503, "crowded"],
+      ["refused", 400, "refused"],
+      ["unreadable", 502, "unreadable"],
+      ["upstream", 502, "upstream"],
+    ];
+    for (const [code, status, error] of cases) {
+      const a = createApp({
+        store: new MemoryStore(),
+        eyes: async () => {
+          throw new EyesError(code, "test");
+        },
+      });
+      const r = await a.request("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), env);
+      expect(r.status).toBe(status);
+      const body = await json(r);
+      expect(body.error).toBe(error);
+      expect(body.message.length).toBeGreaterThan(10);
+    }
   });
 });
 

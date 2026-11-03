@@ -91,7 +91,7 @@ async function lookGroq(cfg: EyesConfig, image: string, mediaType: MediaType): P
       temperature: 0.2,
       timeoutMs: 60_000,
       // Free-tier limits reset every minute; a short wait beats an error.
-      maxWaitMs: 20_000,
+      maxWaitMs: 25_000,
     });
   } catch (e) {
     if (e instanceof GroqError) throw new EyesError(e.code, e.message);

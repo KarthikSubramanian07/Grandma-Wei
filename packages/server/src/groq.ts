@@ -24,7 +24,7 @@ export interface GroqRequest {
   maxTokens: number;
   temperature: number;
   timeoutMs: number;
-  /** On a 429 that clears within this long, wait and try once more. */
+  /** On a 429, wait as Groq asks and retry (up to 3 times) while the total wait stays under this. */
   maxWaitMs?: number;
   fetch?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
@@ -75,12 +75,15 @@ export async function groqJson(req: GroqRequest): Promise<unknown> {
 
   let res = await send(true);
   if (res.status === 400) res = await send(false);
-  if (res.status === 429) {
+  // Free-tier budgets refill continuously, so a few short waits usually get through.
+  const sleep = req.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  let budget = req.maxWaitMs ?? 0;
+  for (let tries = 0; res.status === 429 && tries < 3; tries++) {
     const wait = retryAfterMs(res);
-    if (wait !== null && wait <= (req.maxWaitMs ?? 0)) {
-      await (req.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms))))(wait);
-      res = await send(true);
-    }
+    if (wait === null || wait > budget) break;
+    budget -= wait;
+    await sleep(wait);
+    res = await send(true);
   }
   if (res.status === 429) throw new GroqError("busy", "rate limited upstream");
   if (!res.ok) throw new GroqError("upstream", `api error ${res.status}`);
