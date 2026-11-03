@@ -60,7 +60,7 @@ export type MediaType = "image/jpeg" | "image/png" | "image/webp";
 
 export class EyesError extends Error {
   constructor(
-    public code: "refused" | "unreadable" | "upstream" | "busy",
+    public code: "refused" | "unreadable" | "upstream" | "busy" | "tired",
     message: string,
   ) {
     super(message);
@@ -88,7 +88,9 @@ async function lookGroq(cfg: EyesConfig, image: string, mediaType: MediaType): P
       schemaName: "scene",
       schema: sceneJsonSchema() as Record<string, unknown>,
       maxTokens: 8000,
-      temperature: 0.2,
+      // She should see the same room the same way every time.
+      temperature: 0,
+      seed: 1,
       timeoutMs: 60_000,
       // Free-tier limits reset every minute; a short wait beats an error.
       maxWaitMs: 25_000,

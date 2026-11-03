@@ -3,7 +3,8 @@ import type { Context } from "hono";
 import { Scene } from "@gw/schema";
 import { compose } from "@gw/voice";
 import { engine } from "./engine";
-import { EyesError, look, type MediaType, type Provider } from "./eyes";
+import { EYES_SYSTEM, EyesError, look, type MediaType, type Provider } from "./eyes";
+import { photoMemory, recall, remember } from "./memory";
 import { checkLimit } from "./limit";
 import { type Envelope, type ReadingResult, type Signed, sharePayload } from "./result";
 import { SAMPLES } from "./samples";
@@ -99,6 +100,7 @@ const ERR = {
   unreadable: "I looked and looked and couldn't make sense of it. Try again from a corner, with the lights on.",
   upstream: "My eyes aren't working right now. Give it a minute and try again.",
   crowded: "Everyone is showing me their rooms at once. Sit down, have some tea, and try again in a minute.",
+  resting: "I've read so many rooms today my eyes need a rest. Come back in a little while, or try a practice room.",
   forged: "That reading isn't one of mine.",
   no_fridge: "Sharing isn't switched on here yet.",
   not_found: "I don't have that one. Maybe it was deleted.",
@@ -108,6 +110,13 @@ type ErrCode = keyof typeof ERR;
 
 function fail(c: Context, status: 400 | 403 | 404 | 413 | 429 | 502 | 503, code: ErrCode) {
   return c.json({ error: code, message: ERR[code] }, status);
+}
+
+/** Names her eyes (provider, model, prompt), so changing any of them starts a fresh memory. */
+let eyesPromptHash: Promise<string> | null = null;
+async function eyesVersion(brain: Brain): Promise<string> {
+  eyesPromptHash ??= sha256(EYES_SYSTEM);
+  return `${brain.provider}:${brain.vision}:${await eyesPromptHash}`;
 }
 
 async function signingKey(env: Env): Promise<string> {
@@ -197,39 +206,49 @@ export function createApp(deps: Deps = {}) {
     if (image.length > MAX_IMAGE_B64) return fail(c, 413, "too_big");
     if (!MEDIA_TYPES.has(media_type as MediaType)) return fail(c, 400, "bad_image");
 
-    const limit = await checkLimit(
-      storeFor(env),
-      c.req.header("cf-connecting-ip") ?? "local",
-      await signingKey(env),
-      Number(env.READS_PER_HOUR ?? 12),
-      Number(env.READS_PER_DAY ?? 400),
-    );
-    if (!limit.ok) return fail(c, 429, limit.reason === "daily" ? "busy_day" : "slow_down");
+    // Same photo, same reading: she remembers what she saw (encrypted, never the photo).
+    const store = storeFor(env);
+    const memory = fake ? null : await photoMemory(image, await eyesVersion(brain!));
+    let scene = memory ? await recall(store, memory) : null;
+    const remembered = scene !== null;
 
-    let scene: Scene;
-    try {
-      scene = fake
-        ? body.prev
-          ? engine.imagine(SAMPLES.traveler!.scene, ["move_bed", "declutter", "real_plant"])
-          : SAMPLES.traveler!.scene
-        : await eyes(
-            { provider: brain!.provider, apiKey: brain!.apiKey, model: brain!.vision, effort: env.VISION_EFFORT ?? "medium" },
-            image,
-            media_type as MediaType,
-          );
-    } catch (e) {
-      const code = e instanceof EyesError ? e.code : "upstream";
-      if (code === "refused") return fail(c, 400, "refused");
-      if (code === "unreadable") return fail(c, 502, "unreadable");
-      if (code === "busy") return fail(c, 503, "crowded");
-      return fail(c, 502, "upstream");
+    if (!scene) {
+      const limit = await checkLimit(
+        store,
+        c.req.header("cf-connecting-ip") ?? "local",
+        await signingKey(env),
+        Number(env.READS_PER_HOUR ?? 12),
+        Number(env.READS_PER_DAY ?? 400),
+      );
+      if (!limit.ok) return fail(c, 429, limit.reason === "daily" ? "busy_day" : "slow_down");
+
+      try {
+        scene = fake
+          ? body.prev
+            ? engine.imagine(SAMPLES.traveler!.scene, ["move_bed", "declutter", "real_plant"])
+            : SAMPLES.traveler!.scene
+          : await eyes(
+              { provider: brain!.provider, apiKey: brain!.apiKey, model: brain!.vision, effort: env.VISION_EFFORT ?? "medium" },
+              image,
+              media_type as MediaType,
+            );
+      } catch (e) {
+        const code = e instanceof EyesError ? e.code : "upstream";
+        if (code === "refused") return fail(c, 400, "refused");
+        if (code === "unreadable") return fail(c, 502, "unreadable");
+        if (code === "busy") return fail(c, 503, "crowded");
+        if (code === "tired") return fail(c, 503, "resting");
+        return fail(c, 502, "upstream");
+      }
+      if (memory) await remember(store, memory, scene);
     }
 
     const prev = body.prev ? await openSigned(env, body.prev.signed, body.prev.sig) : null;
     const reading = engine.read(scene);
     const diff = prev ? engine.diff(prev.scene, scene) : null;
     const id = randomId(9);
-    const draft = compose(scene, reading, id, diff ?? undefined);
+    // Her hand-written lines are picked by the photo, so the same photo gets the same words.
+    const draft = compose(scene, reading, memory?.id ?? id, diff ?? undefined);
     const skipVoice = fake || (brain!.provider === "groq" && env.GROQ_VOICE !== "1");
     const voice = skipVoice
       ? draft
@@ -239,6 +258,7 @@ export function createApp(deps: Deps = {}) {
           reading,
           draft,
         );
+    if (remembered) c.header("X-Grandma-Remembered", "1");
     return c.json(await envelope(env, { v: 1, id, sample: null, scene, voice, diff }));
   });
 

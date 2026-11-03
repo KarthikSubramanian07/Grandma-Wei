@@ -78,7 +78,7 @@ async function run(source: Source, set: (p: Phase) => void) {
 }
 
 function Trouble({ message, code }: { message: string; code: string }) {
-  const noEyes = code === "no_eyes" || code === "napping";
+  const noEyes = code === "no_eyes" || code === "napping" || code === "resting";
   return (
     <main className="shell trouble fade-in">
       <Grandma mood="concerned" size={150} />

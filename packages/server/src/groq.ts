@@ -23,6 +23,8 @@ export interface GroqRequest {
   schema: Record<string, unknown>;
   maxTokens: number;
   temperature: number;
+  /** Best-effort deterministic sampling. */
+  seed?: number;
   timeoutMs: number;
   /** On a 429, wait as Groq asks and retry (up to 3 times) while the total wait stays under this. */
   maxWaitMs?: number;
@@ -30,9 +32,12 @@ export interface GroqRequest {
   sleep?: (ms: number) => Promise<void>;
 }
 
+/** A limit that won't clear for this long means the day's budget is spent, not a crowd. */
+export const TIRED_AFTER_MS = 2 * 60_000;
+
 export class GroqError extends Error {
   constructor(
-    public code: "refused" | "unreadable" | "upstream" | "busy",
+    public code: "refused" | "unreadable" | "upstream" | "busy" | "tired",
     message: string,
   ) {
     super(message);
@@ -57,6 +62,7 @@ export async function groqJson(req: GroqRequest): Promise<unknown> {
     reasoning_effort: req.effort,
     reasoning_format: "hidden",
     temperature: req.temperature,
+    ...(req.seed === undefined ? {} : { seed: req.seed }),
     max_completion_tokens: req.maxTokens,
   });
 
@@ -85,7 +91,12 @@ export async function groqJson(req: GroqRequest): Promise<unknown> {
     await sleep(wait);
     res = await send(true);
   }
-  if (res.status === 429) throw new GroqError("busy", "rate limited upstream");
+  if (res.status === 429) {
+    const wait = retryAfterMs(res);
+    throw wait !== null && wait > TIRED_AFTER_MS
+      ? new GroqError("tired", "daily budget spent")
+      : new GroqError("busy", "rate limited upstream");
+  }
   if (!res.ok) throw new GroqError("upstream", `api error ${res.status}`);
 
   let data: Completion;
