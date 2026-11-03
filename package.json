@@ -11,7 +11,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "dev": "bun run --cwd apps/web dev",
     "build": "bun run qi && bun run --cwd apps/web build",
-    "e2e": "bun run --cwd apps/web e2e"
+    "e2e": "bun run --cwd apps/web e2e",
+    "deploy": "bash scripts/deploy.sh"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261102.1",

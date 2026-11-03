@@ -4,7 +4,7 @@
 
 **Live at [grandma-wei.pages.dev](https://grandma-wei.pages.dev)** · [![CI](https://github.com/KarthikSubramanian07/Grandma-Wei/actions/workflows/ci.yml/badge.svg)](https://github.com/KarthikSubramanian07/Grandma-Wei/actions/workflows/ci.yml)
 
-`feng-shui` · `rust` · `webassembly` · `claude` · `cloudflare-pages` · `bun` · `react` · `game`
+`feng-shui` · `rust` · `webassembly` · `groq` · `claude` · `cloudflare-pages` · `bun` · `react` · `game`
 
 ![Grandma Wei's home page](docs/screens/home.jpg)
 
@@ -39,7 +39,7 @@ No photo handy? Three practice rooms work with no setup at all.
 ## Privacy
 
 - Your browser resizes the photo and re-encodes it, which strips location and camera data, before anything is sent.
-- The server passes it to Claude once, never stores it, and never logs request bodies.
+- The server passes it to the vision model once (Groq on the live site, or Claude), never stores it, and never logs request bodies.
 - Your readings, photos and magnets live in your browser (IndexedDB) and nowhere else.
 - Shared links contain the scorecard text only and are deleted when you delete the reading.
 - Rate limits use a salted hash, never an IP address.
@@ -67,11 +67,11 @@ flowchart TB
     OG["/og/score.png<br/>one per score, pre-rendered"]
   end
 
-  Claude["Claude API<br/>vision + voice"]
+  Model["Vision model<br/>Groq (Qwen) or Claude<br/>eyes + voice"]
 
   Photo -- "POST /api/read" --> API
-  API -- "photo, once" --> Claude
-  Claude -- "Scene JSON + her lines" --> API
+  API -- "photo, once" --> Model
+  Model -- "Scene JSON + her lines" --> API
   API --> QiEdge
   API -- "signed reading" --> Fridge
   Fridge --> QiWeb --> Sketch
@@ -91,9 +91,9 @@ sequenceDiagram
   actor You
   participant B as Browser
   participant S as Pages API
-  participant E as Claude (eyes)
+  participant E as Vision model (eyes)
   participant Q as qi engine (Rust)
-  participant V as Claude (voice)
+  participant V as Language model (voice)
 
   You->>B: Take a photo
   B->>B: Resize, re-encode, strip metadata
@@ -130,9 +130,9 @@ flowchart LR
 | Path | What's there |
 | --- | --- |
 | `crates/qi` | The rules engine in Rust, compiled to WebAssembly: 18 rules over five pillars, deal-breaker caps, chores and their points, before/after diffs and magnets, a Laplace-solved qi flow field, and a solver that suggests where the bed should go |
-| `packages/schema` | The room description schema (Zod), which doubles as Claude's structured-output schema, and the engine's types |
+| `packages/schema` | The room description schema (Zod), which doubles as the model's strict structured-output schema, and the engine's types |
 | `packages/voice` | Grandma's hand-written lines, the personalization prompt, and the voice linter |
-| `packages/server` | The API: vision, scoring, voice, signing, shares, rate limits, share-page tags |
+| `packages/server` | The API: vision (Groq or Claude), scoring, voice, signing, shares, rate limits, share-page tags |
 | `packages/card` | One SVG template for the post, story and link-preview images, wrapped with real font metrics and rendered by resvg |
 | `apps/web` | The site, Pages Functions, storage config (KV, or D1 via `migrations/`), and the end-to-end tests |
 | `fixtures/rooms` | The practice rooms: Unsplash photos with hand-written scenes |
@@ -157,7 +157,7 @@ cd apps/web
 ./node_modules/.bin/wrangler pages dev dist # http://localhost:8788
 ```
 
-Practice rooms work right away. For real photo readings, put `ANTHROPIC_API_KEY=...` in `apps/web/.dev.vars`.
+Practice rooms work right away. For real photo readings, put `GROQ_API_KEY=...` (or `ANTHROPIC_API_KEY=...`) in `apps/web/.dev.vars`.
 
 ## Test it
 
@@ -172,14 +172,19 @@ The end-to-end suite runs the real site and functions with local KV storage and 
 
 ## Deploy
 
-Merges to `main` deploy to **grandma-wei.pages.dev** through `.github/workflows/deploy.yml`. It creates the Pages project if needed and sets secrets. Shares and rate limits live in the Workers KV namespace named in `apps/web/wrangler.toml`. It needs these repository secrets:
+```sh
+bun run deploy   # build, ship to grandma-wei.pages.dev, smoke-test the live site
+```
 
-| Secret | Needed for |
+It deploys from your machine with your Cloudflare login (`wrangler login` once), so there are no deploy tokens in GitHub. CI still tests every push. Shares and rate limits live in the Workers KV namespace named in `apps/web/wrangler.toml`. Secrets live on the Pages project:
+
+| Secret | What it does |
 | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | Deploying (Pages and Workers KV edit permissions) |
-| `CLOUDFLARE_ACCOUNT_ID` | Deploying |
-| `ANTHROPIC_API_KEY` | Real photo readings; without it the site runs practice rooms only |
-| `SIGNING_SECRET` | Optional; the live project already has one |
+| `GROQ_API_KEY` | Real photo readings with Qwen 3.8 27B on Groq (vision plus strict JSON output) |
+| `ANTHROPIC_API_KEY` | Or Claude instead. If both are set, Claude wins unless `AI_PROVIDER=groq` |
+| `SIGNING_SECRET` | Signs readings so retakes and shares can't be forged; the live project has one |
+
+Without either API key the site runs practice rooms only. Set one with `apps/web/node_modules/.bin/wrangler pages secret put GROQ_API_KEY --project-name grandma-wei`.
 
 ## Credits
 
