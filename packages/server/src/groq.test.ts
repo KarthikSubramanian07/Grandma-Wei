@@ -72,20 +72,25 @@ describe("groqJson", () => {
     expect(calls[1]!.body.response_format).toEqual({ type: "json_object" });
   });
 
-  test("waits out a short rate limit once, but not a long one", async () => {
+  test("waits out short rate limits within a total budget, then gives up", async () => {
     const limited = (after: string) => new Response("{}", { status: 429, headers: { "retry-after": after } });
     const waits: number[] = [];
     const sleep = async (ms: number) => void waits.push(ms);
 
-    const short = fakeFetch(limited("7"), ok('{"a":3}'));
-    expect(await groqJson({ ...base(short.f), maxWaitMs: 20_000, sleep })).toEqual({ a: 3 });
-    expect(waits).toEqual([7000]);
-    expect(short.calls).toHaveLength(2);
+    const short = fakeFetch(limited("7"), limited("6"), ok('{"a":3}'));
+    expect(await groqJson({ ...base(short.f), maxWaitMs: 25_000, sleep })).toEqual({ a: 3 });
+    expect(waits).toEqual([7000, 6000]);
+    expect(short.calls).toHaveLength(3);
 
-    const long = fakeFetch(limited("45"), ok('{"a":4}'));
-    const err = await groqJson({ ...base(long.f), maxWaitMs: 20_000, sleep }).catch((e) => e);
+    waits.length = 0;
+    const overBudget = fakeFetch(limited("15"), limited("15"), ok('{"a":4}'));
+    const err = await groqJson({ ...base(overBudget.f), maxWaitMs: 25_000, sleep }).catch((e) => e);
     expect((err as GroqError).code).toBe("busy");
-    expect(long.calls).toHaveLength(1);
+    expect(waits).toEqual([15000]);
+
+    const forever = fakeFetch(limited("1"));
+    expect(((await groqJson({ ...base(forever.f), maxWaitMs: 25_000, sleep }).catch((e) => e)) as GroqError).code).toBe("busy");
+    expect(forever.calls).toHaveLength(4);
 
     const off = fakeFetch(limited("1"), ok('{"a":5}'));
     expect(((await groqJson({ ...base(off.f), sleep }).catch((e) => e)) as GroqError).code).toBe("busy");

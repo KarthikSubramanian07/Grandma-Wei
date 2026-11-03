@@ -98,6 +98,7 @@ const ERR = {
   refused: "I'm not going to read that one. Show me a room.",
   unreadable: "I looked and looked and couldn't make sense of it. Try again from a corner, with the lights on.",
   upstream: "My eyes aren't working right now. Give it a minute and try again.",
+  crowded: "Everyone is showing me their rooms at once. Sit down, have some tea, and try again in a minute.",
   forged: "That reading isn't one of mine.",
   no_fridge: "Sharing isn't switched on here yet.",
   not_found: "I don't have that one. Maybe it was deleted.",
@@ -220,7 +221,7 @@ export function createApp(deps: Deps = {}) {
       const code = e instanceof EyesError ? e.code : "upstream";
       if (code === "refused") return fail(c, 400, "refused");
       if (code === "unreadable") return fail(c, 502, "unreadable");
-      if (code === "busy") return fail(c, 503, "upstream");
+      if (code === "busy") return fail(c, 503, "crowded");
       return fail(c, 502, "upstream");
     }
 
