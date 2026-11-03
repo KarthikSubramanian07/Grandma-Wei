@@ -22,6 +22,12 @@ export interface Env {
   VOICE_MODEL?: string;
   GROQ_VISION_MODEL?: string;
   GROQ_VOICE_MODEL?: string;
+  /**
+   * "1" also personalizes her lines on Groq. Off by default: Groq's free tier
+   * allows about 1,000 output tokens a minute, and one photo reading uses most
+   * of that, so a second call would make the next person's reading fail.
+   */
+  GROQ_VOICE?: string;
   VISION_EFFORT?: "low" | "medium" | "high";
   VOICE_EFFORT?: "low" | "medium" | "high";
   /** "1" pauses new readings (samples and shares keep working). */
@@ -223,7 +229,8 @@ export function createApp(deps: Deps = {}) {
     const diff = prev ? engine.diff(prev.scene, scene) : null;
     const id = randomId(9);
     const draft = compose(scene, reading, id, diff ?? undefined);
-    const voice = fake
+    const skipVoice = fake || (brain!.provider === "groq" && env.GROQ_VOICE !== "1");
+    const voice = skipVoice
       ? draft
       : await tongue(
           { provider: brain!.provider, apiKey: brain!.apiKey, model: brain!.voice, effort: env.VOICE_EFFORT ?? "low" },

@@ -72,6 +72,25 @@ describe("groqJson", () => {
     expect(calls[1]!.body.response_format).toEqual({ type: "json_object" });
   });
 
+  test("waits out a short rate limit once, but not a long one", async () => {
+    const limited = (after: string) => new Response("{}", { status: 429, headers: { "retry-after": after } });
+    const waits: number[] = [];
+    const sleep = async (ms: number) => void waits.push(ms);
+
+    const short = fakeFetch(limited("7"), ok('{"a":3}'));
+    expect(await groqJson({ ...base(short.f), maxWaitMs: 20_000, sleep })).toEqual({ a: 3 });
+    expect(waits).toEqual([7000]);
+    expect(short.calls).toHaveLength(2);
+
+    const long = fakeFetch(limited("45"), ok('{"a":4}'));
+    const err = await groqJson({ ...base(long.f), maxWaitMs: 20_000, sleep }).catch((e) => e);
+    expect((err as GroqError).code).toBe("busy");
+    expect(long.calls).toHaveLength(1);
+
+    const off = fakeFetch(limited("1"), ok('{"a":5}'));
+    expect(((await groqJson({ ...base(off.f), sleep }).catch((e) => e)) as GroqError).code).toBe("busy");
+  });
+
   test("maps failures to codes the API can explain in her voice", async () => {
     const code = async (...r: (Response | Error)[]) =>
       groqJson(base(fakeFetch(...r).f)).then(

@@ -96,6 +96,12 @@ describe("choosing her eyes", () => {
     const r = await a.request("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), groqEnv);
     expect(r.status).toBe(200);
     expect(((await json(r)) as Envelope).result.reading.score).toBe(49);
+    // Her hand-written lines, so the free tier's per-minute budget goes to the eyes.
+    expect(seen).toEqual(["eyes:groq:qwen/qwen3.8-27b:gsk_live"]);
+
+    seen.length = 0;
+    const withVoice = { ...groqEnv, GROQ_VOICE: "1" };
+    expect((await a.request("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), withVoice)).status).toBe(200);
     expect(seen).toEqual(["eyes:groq:qwen/qwen3.8-27b:gsk_live", "voice:groq:qwen/qwen3.8-27b"]);
   });
 });
