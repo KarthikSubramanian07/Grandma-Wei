@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Scene } from "@gw/schema";
+import { brainFor } from "./app";
 import { createApp, initEngine, MemoryStore, type Envelope } from "./index";
 import { SAMPLES } from "./samples";
 
@@ -63,6 +64,39 @@ describe("health and samples", () => {
     const r = await app().req("/api/sample/nope");
     expect(r.status).toBe(404);
     expect((await json(r)).message).toContain("I don't have that one");
+  });
+});
+
+describe("choosing her eyes", () => {
+  test("Claude when it has a key, Groq otherwise, and AI_PROVIDER can prefer Groq", () => {
+    expect(brainFor({})).toBeNull();
+    expect(brainFor({ ANTHROPIC_API_KEY: "a" })).toMatchObject({ provider: "anthropic", vision: "claude-opus-5-5" });
+    expect(brainFor({ GROQ_API_KEY: "g" })).toMatchObject({ provider: "groq", apiKey: "g", vision: "qwen/qwen3.8-27b" });
+    expect(brainFor({ ANTHROPIC_API_KEY: "a", GROQ_API_KEY: "g" })?.provider).toBe("anthropic");
+    expect(brainFor({ ANTHROPIC_API_KEY: "a", GROQ_API_KEY: "g", AI_PROVIDER: "groq" })?.provider).toBe("groq");
+    expect(brainFor({ ANTHROPIC_API_KEY: "a", AI_PROVIDER: "groq" })?.provider).toBe("anthropic");
+    expect(brainFor({ GROQ_API_KEY: "g", GROQ_VISION_MODEL: "x/y", VISION_MODEL: "claude-z" })?.vision).toBe("x/y");
+  });
+
+  test("a Groq key alone switches photo readings on and reaches the eyes and voice", async () => {
+    const seen: string[] = [];
+    const a = createApp({
+      store: new MemoryStore(),
+      eyes: async (cfg) => {
+        seen.push(`eyes:${cfg.provider}:${cfg.model}:${cfg.apiKey}`);
+        return SAMPLES.traveler!.scene;
+      },
+      tongue: async (cfg, _s, _r, draft) => {
+        seen.push(`voice:${cfg.provider}:${cfg.model}`);
+        return draft;
+      },
+    });
+    const groqEnv = { GROQ_API_KEY: "gsk_live", SIGNING_SECRET: "s" };
+    expect(await json(await a.request("/api/health", undefined, groqEnv))).toMatchObject({ eyes: true });
+    const r = await a.request("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), groqEnv);
+    expect(r.status).toBe(200);
+    expect(((await json(r)) as Envelope).result.reading.score).toBe(49);
+    expect(seen).toEqual(["eyes:groq:qwen/qwen3.8-27b:gsk_live", "voice:groq:qwen/qwen3.8-27b"]);
   });
 });
 
