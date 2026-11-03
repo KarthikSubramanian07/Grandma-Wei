@@ -104,8 +104,8 @@ const privacy: Page = {
 Photos of your home are personal. Here is exactly what happens to yours.
 
 1. **Your phone shrinks the photo first.** It's resized and saved as a fresh JPEG in your browser, which removes hidden details like location and camera info, before anything is sent.
-2. **Grandma's eyes look at it once.** The photo goes to our server and on to Anthropic's Claude API, which describes the room as a list of facts (where the bed is, whether the floor is clear). The AI is told to ignore people and anything private, like papers or screens.
-3. **Then it's forgotten.** Our server never saves your photo and never logs it. Anthropic's handling of API data is described in its [privacy policy](https://www.anthropic.com/legal/privacy).
+2. **Grandma's eyes look at it once.** The photo goes to our server and on to an AI vision model (the open Qwen model, run by Groq), which describes the room as a list of facts (where the bed is, whether the floor is clear). The AI is told to ignore people and anything private, like papers or screens.
+3. **Then it's forgotten.** Our server never saves your photo and never logs it. Groq's handling of API data is described in its [privacy policy](https://groq.com/privacy-policy).
 4. **Your history stays with you.** Readings, photos and magnets on the fridge are stored in your browser only. Clear them any time from the fridge.
 5. **Sharing is text only, and undoable.** A shared link shows the scorecard (score, her words, the chores), never the photo. Deleting the reading from your fridge deletes the link too, and links expire on their own after a year.
 6. **No ads, no trackers, no accounts.** We count how many readings happen per hour to stop abuse, using a scrambled code, never your IP address.
@@ -128,7 +128,7 @@ Grandma Wei is a free web app that reads the feng shui of a room from one photo.
 
 ## How it works
 
-- An AI model (Anthropic's Claude) looks at the photo and describes the room as fixed facts: whether the bed is in line with the door, how cluttered the floor is, what's on the walls.
+- An AI vision model (the open Qwen model, run by Groq; the code also supports Anthropic's Claude) looks at the photo and describes the room as fixed facts: whether the bed is in line with the door, how cluttered the floor is, what's on the walls.
 - A rules engine written in Rust turns those facts into the score. It runs the same way every time, so the same room always gets the same number, and every chore's points are computed, not guessed.
 - Grandma's lines come from a hand-written bank, sometimes personalized by the AI, and every line passes a linter that rejects stereotypes, accents, insults and invented numbers.
 

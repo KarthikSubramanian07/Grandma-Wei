@@ -12,14 +12,14 @@ export function Privacy() {
           removes hidden details like location and camera info, before anything is sent.
         </li>
         <li>
-          <strong>Grandma's eyes look at it once.</strong> The photo goes to our server and on to Anthropic's Claude API, which
-          describes the room as a list of facts (where the bed is, whether the floor is clear). The AI is told to ignore people
+          <strong>Grandma's eyes look at it once.</strong> The photo goes to our server and on to an AI vision model (the open
+          Qwen model, run by Groq), which describes the room as a list of facts (where the bed is, whether the floor is clear). The AI is told to ignore people
           and anything private, like papers or screens.
         </li>
         <li>
-          <strong>Then it's forgotten.</strong> Our server never saves your photo and never logs it. Anthropic's handling of API
-          data is described in its{" "}
-          <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noreferrer">
+          <strong>Then it's forgotten.</strong> Our server never saves your photo and never logs it. Groq's handling of API data
+          is described in its{" "}
+          <a href="https://groq.com/privacy-policy" target="_blank" rel="noreferrer">
             privacy policy
           </a>
           .
