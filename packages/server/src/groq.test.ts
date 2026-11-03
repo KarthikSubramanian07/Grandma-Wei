@@ -92,6 +92,11 @@ describe("groqJson", () => {
     expect(((await groqJson({ ...base(forever.f), maxWaitMs: 25_000, sleep }).catch((e) => e)) as GroqError).code).toBe("busy");
     expect(forever.calls).toHaveLength(4);
 
+    // Groq's daily budget is spent: a wait of many minutes is "tired", not "busy".
+    const spent = fakeFetch(limited("1398"));
+    expect(((await groqJson({ ...base(spent.f), maxWaitMs: 25_000, sleep }).catch((e) => e)) as GroqError).code).toBe("tired");
+    expect(spent.calls).toHaveLength(1);
+
     const off = fakeFetch(limited("1"), ok('{"a":5}'));
     expect(((await groqJson({ ...base(off.f), sleep }).catch((e) => e)) as GroqError).code).toBe("busy");
   });
