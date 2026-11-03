@@ -208,7 +208,9 @@ export function createApp(deps: Deps = {}) {
 
     // Same photo, same reading: she remembers what she saw (encrypted, never the photo).
     const store = storeFor(env);
-    const memory = fake ? null : await photoMemory(image, await eyesVersion(brain!));
+    // (The test stand-in remembers first looks too, so memory is tested end to end
+    // in the real runtime; its retakes always look fresh so they can show progress.)
+    const memory = fake && body.prev ? null : await photoMemory(image, fake ? "fake" : await eyesVersion(brain!));
     let scene = memory ? await recall(store, memory) : null;
     const remembered = scene !== null;
 
