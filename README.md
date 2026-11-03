@@ -40,6 +40,7 @@ No photo handy? Three practice rooms work with no setup at all.
 
 - Your browser resizes the photo and re-encodes it, which strips location and camera data, before anything is sent.
 - The server passes it to the vision model once (Groq on the live site, or Claude), never stores it, and never logs request bodies.
+- To give the same photo the same reading, the server keeps her description of the room (never the photo) for 30 days, encrypted with AES-GCM under a key derived from the photo itself. The lookup id is a separate hash, so an entry can't be found or read without the exact photo. A remembered photo costs no AI call and doesn't count toward the hourly limit.
 - Your readings, photos and magnets live in your browser (IndexedDB) and nowhere else.
 - Shared links contain the scorecard text only and are deleted when you delete the reading.
 - Rate limits use a salted hash, never an IP address.
@@ -125,14 +126,14 @@ flowchart LR
   F -- "still not 100" --> C
 ```
 
-**Why the score is fair.** The model only *describes* the room, in fixed categories ("the bed is in line with the door", "the floor has some clutter"). A deterministic Rust engine turns that description into the score. The same room always gets the same number, moving the bed changes it for a reason you can see, and chore points are computed by re-scoring, so `49 + 34` really is `83`. Deal-breakers cap the score: a bed in the coffin position holds a room at 49 until it moves.
+**Why the score is fair.** The model only *describes* the room, in fixed categories ("the bed is in line with the door", "the floor has some clutter"). A deterministic Rust engine turns that description into the score. The same room always gets the same number, moving the bed changes it for a reason you can see, and chore points are computed by re-scoring, so `49 + 34` really is `83`. The model can describe the same room slightly differently on two looks, so the server remembers each photo it has read (encrypted, see Privacy): the exact same photo always gets the exact same reading. Deal-breakers cap the score: a bed in the coffin position holds a room at 49 until it moves.
 
 | Path | What's there |
 | --- | --- |
 | `crates/qi` | The rules engine in Rust, compiled to WebAssembly: 18 rules over five pillars, deal-breaker caps, chores and their points, before/after diffs and magnets, a Laplace-solved qi flow field, and a solver that suggests where the bed should go |
 | `packages/schema` | The room description schema (Zod), which doubles as the model's strict structured-output schema, and the engine's types |
 | `packages/voice` | Grandma's hand-written lines, the personalization prompt, and the voice linter |
-| `packages/server` | The API: vision (Groq or Claude), scoring, voice, signing, shares, rate limits, share-page tags |
+| `packages/server` | The API: vision (Groq or Claude), photo memory, scoring, voice, signing, shares, rate limits, share-page tags |
 | `packages/card` | One SVG template for the post, story and link-preview images, wrapped with real font metrics and rendered by resvg |
 | `apps/web` | The site, Pages Functions, storage config (KV, or D1 via `migrations/`), and the end-to-end tests |
 | `fixtures/rooms` | The practice rooms: Unsplash photos with hand-written scenes |
