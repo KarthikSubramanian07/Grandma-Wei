@@ -9,7 +9,20 @@ PROJECT=grandma-wei
 W=apps/web/node_modules/.bin/wrangler
 
 bun run build
-(cd apps/web && ../../$W pages deploy dist --project-name "$PROJECT" --branch main --commit-dirty=true)
+
+# The upload sometimes drops mid-request ("other side closed"); it's safe to retry,
+# because files already uploaded are skipped.
+for try in 1 2 3; do
+  if (cd apps/web && ../../$W pages deploy dist --project-name "$PROJECT" --branch main --commit-dirty=true); then
+    break
+  fi
+  if [ "$try" = 3 ]; then
+    echo "Deploy failed three times. Check your connection, or run: bunx wrangler@latest pages deploy dist --project-name $PROJECT --branch main (from apps/web)" >&2
+    exit 1
+  fi
+  echo "Upload dropped, trying again ($try of 3)…" >&2
+  sleep 5
+done
 
 echo "Checking the live site…"
 sleep 10
