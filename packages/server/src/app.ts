@@ -3,7 +3,7 @@ import type { Context } from "hono";
 import { Scene } from "@gw/schema";
 import { compose } from "@gw/voice";
 import { engine } from "./engine";
-import { EyesError, look, type MediaType } from "./eyes";
+import { EyesError, look, type MediaType, type Provider } from "./eyes";
 import { checkLimit } from "./limit";
 import { type Envelope, type ReadingResult, type Signed, sharePayload } from "./result";
 import { SAMPLES } from "./samples";
@@ -12,10 +12,16 @@ import { storeFromEnv, type Store } from "./store";
 import { personalize } from "./tongue";
 
 export interface Env {
+  /** Claude for her eyes and voice. */
   ANTHROPIC_API_KEY?: string;
+  /** Or an open model on Groq. Used when there's no Anthropic key, or when AI_PROVIDER is "groq". */
+  GROQ_API_KEY?: string;
+  AI_PROVIDER?: Provider;
   SIGNING_SECRET?: string;
   VISION_MODEL?: string;
   VOICE_MODEL?: string;
+  GROQ_VISION_MODEL?: string;
+  GROQ_VOICE_MODEL?: string;
   VISION_EFFORT?: "low" | "medium" | "high";
   VOICE_EFFORT?: "low" | "medium" | "high";
   /** "1" pauses new readings (samples and shares keep working). */
@@ -40,6 +46,38 @@ export interface Deps {
 }
 
 const DEFAULT_MODEL = "claude-opus-5-5";
+/** Groq's vision model with strict structured output. */
+const DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b";
+
+interface Brain {
+  provider: Provider;
+  apiKey: string;
+  vision: string;
+  voice: string;
+}
+
+/** Which model gives her eyes and voice: Claude if it has a key, otherwise Groq. */
+export function brainFor(env: Env): Brain | null {
+  const groq = (): Brain | null =>
+    env.GROQ_API_KEY
+      ? {
+          provider: "groq",
+          apiKey: env.GROQ_API_KEY,
+          vision: env.GROQ_VISION_MODEL ?? DEFAULT_GROQ_MODEL,
+          voice: env.GROQ_VOICE_MODEL ?? DEFAULT_GROQ_MODEL,
+        }
+      : null;
+  const claude = (): Brain | null =>
+    env.ANTHROPIC_API_KEY
+      ? {
+          provider: "anthropic",
+          apiKey: env.ANTHROPIC_API_KEY,
+          vision: env.VISION_MODEL ?? DEFAULT_MODEL,
+          voice: env.VOICE_MODEL ?? DEFAULT_MODEL,
+        }
+      : null;
+  return env.AI_PROVIDER === "groq" ? (groq() ?? claude()) : (claude() ?? groq());
+}
 const MAX_IMAGE_B64 = 3_000_000; // ~2.2 MB of image; the browser sends ~300 KB
 const MEDIA_TYPES = new Set<MediaType>(["image/jpeg", "image/png", "image/webp"]);
 
@@ -68,7 +106,8 @@ function fail(c: Context, status: 400 | 403 | 404 | 413 | 429 | 502 | 503, code:
 async function signingKey(env: Env): Promise<string> {
   if (env.SIGNING_SECRET) return env.SIGNING_SECRET;
   // Fall back to a key derived from the API key, so a deploy with only an API key is still safe.
-  if (env.ANTHROPIC_API_KEY) return sha256(`grandma-wei:sign:${env.ANTHROPIC_API_KEY}`);
+  const key = env.ANTHROPIC_API_KEY ?? env.GROQ_API_KEY;
+  if (key) return sha256(`grandma-wei:sign:${key}`);
   return "grandma-wei-local-development-only";
 }
 
@@ -115,7 +154,7 @@ export function createApp(deps: Deps = {}) {
     c.json({
       ok: true,
       rules_version: engine.version(),
-      eyes: Boolean(c.env?.ANTHROPIC_API_KEY) && c.env?.READS_PAUSED !== "1",
+      eyes: Boolean(brainFor(c.env ?? {})) && c.env?.READS_PAUSED !== "1",
       fridge: Boolean(storeFor(c.env ?? {})),
     }),
   );
@@ -136,8 +175,9 @@ export function createApp(deps: Deps = {}) {
   app.post("/api/read", async (c) => {
     const env = c.env ?? {};
     if (env.READS_PAUSED === "1") return fail(c, 503, "napping");
-    const fake = env.FAKE_EYES === "1" && !env.ANTHROPIC_API_KEY;
-    if (!env.ANTHROPIC_API_KEY && !fake) return fail(c, 503, "no_eyes");
+    const brain = brainFor(env);
+    const fake = env.FAKE_EYES === "1" && !brain;
+    if (!brain && !fake) return fail(c, 503, "no_eyes");
 
     let body: { image?: unknown; media_type?: unknown; prev?: { signed?: unknown; sig?: unknown } };
     try {
@@ -166,7 +206,7 @@ export function createApp(deps: Deps = {}) {
           ? engine.imagine(SAMPLES.traveler!.scene, ["move_bed", "declutter", "real_plant"])
           : SAMPLES.traveler!.scene
         : await eyes(
-            { apiKey: env.ANTHROPIC_API_KEY!, model: env.VISION_MODEL ?? DEFAULT_MODEL, effort: env.VISION_EFFORT ?? "medium" },
+            { provider: brain!.provider, apiKey: brain!.apiKey, model: brain!.vision, effort: env.VISION_EFFORT ?? "medium" },
             image,
             media_type as MediaType,
           );
@@ -186,7 +226,7 @@ export function createApp(deps: Deps = {}) {
     const voice = fake
       ? draft
       : await tongue(
-          { apiKey: env.ANTHROPIC_API_KEY!, model: env.VOICE_MODEL ?? DEFAULT_MODEL, effort: env.VOICE_EFFORT ?? "low" },
+          { provider: brain!.provider, apiKey: brain!.apiKey, model: brain!.voice, effort: env.VOICE_EFFORT ?? "low" },
           scene,
           reading,
           draft,
