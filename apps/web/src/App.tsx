@@ -74,6 +74,9 @@ export function App() {
           <a href="https://github.com/KarthikSubramanian07/Grandma-Wei" target="_blank" rel="noreferrer">
             Source
           </a>
+          <a href="https://buymeacoffee.com/winnerkarthik" target="_blank" rel="noreferrer">
+            Buy me a coffee
+          </a>
         </span>
       </footer>
       {msg && (

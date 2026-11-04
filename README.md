@@ -2,7 +2,7 @@
 
 **Take a photo of your room. Grandma Wei reads its feng shui, scores it, and tells you, lovingly but without mercy, what to fix.**
 
-**Live at [grandma-wei.pages.dev](https://grandma-wei.pages.dev)** · [![CI](https://github.com/KarthikSubramanian07/Grandma-Wei/actions/workflows/ci.yml/badge.svg)](https://github.com/KarthikSubramanian07/Grandma-Wei/actions/workflows/ci.yml)
+**Live at [grandma-wei.pages.dev](https://grandma-wei.pages.dev)** · [![CI](https://github.com/KarthikSubramanian07/Grandma-Wei/actions/workflows/ci.yml/badge.svg)](https://github.com/KarthikSubramanian07/Grandma-Wei/actions/workflows/ci.yml) [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-ffdd00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/winnerkarthik)
 
 `feng-shui` · `rust` · `webassembly` · `groq` · `claude` · `cloudflare-pages` · `bun` · `react` · `game`
 
@@ -186,6 +186,10 @@ It deploys from your machine with your Cloudflare login (`wrangler login` once),
 | `SIGNING_SECRET` | Signs readings so retakes and shares can't be forged; the live project has one |
 
 On Groq's free tier (about 1,000 output tokens a minute, and one reading uses most of it), she skips the second call that personalizes her lines and uses the hand-written ones, and the server waits out short rate limits once. Set the `GROQ_VOICE` variable to `1` to personalize on a paid tier. Without either API key the site runs practice rooms only. Set one with `apps/web/node_modules/.bin/wrangler pages secret put GROQ_API_KEY --project-name grandma-wei`.
+
+## Support
+
+If Grandma Wei talked you into moving the bed, you can [buy me a coffee](https://buymeacoffee.com/winnerkarthik). She would prefer tea.
 
 ## Credits
 
