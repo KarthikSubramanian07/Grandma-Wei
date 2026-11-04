@@ -31,13 +31,19 @@ describe("photo memory", () => {
     const one = await seal(m, scene);
     const two = await seal(m, scene);
     expect(one).not.toBe(two);
-    for (const leak of ["bed", "coffin", "suitcase", photo, m.id]) expect(one).not.toContain(leak);
+    // Ciphertext is random letters, so a short word like "bed" can turn up by
+    // chance. Look for real leaks instead: any 12-character run of the scene's
+    // JSON in the raw bytes, or the photo or lookup id in the stored text.
+    const raw = String.fromCharCode(...Uint8Array.from(atob(one.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)));
+    const plain = JSON.stringify(scene);
+    for (let i = 0; i + 12 <= plain.length; i += 6) expect(raw).not.toContain(plain.slice(i, i + 12));
+    for (const leak of [photo, m.id]) expect(one).not.toContain(leak);
   });
 
   test("tampered or broken entries are ignored, and storage failures never throw", async () => {
     const m = await photoMemory(photo, "v");
     const blob = await seal(m, scene);
-    const flipped = blob.slice(0, -2) + (blob.endsWith("A") ? "B" : "A") + blob.slice(-1);
+    const flipped = blob.slice(0, -2) + (blob.at(-2) === "A" ? "B" : "A") + blob.slice(-1);
     expect(await unseal(m, flipped)).toBeNull();
     expect(await unseal(m, "not base64 !!")).toBeNull();
 
