@@ -214,7 +214,11 @@ export function createApp(deps: Deps = {}) {
     let scene = memory ? await recall(store, memory) : null;
     const remembered = scene !== null;
 
-    if (!scene) {
+    const skipVoice = fake || (brain!.provider === "groq" && env.GROQ_VOICE !== "1");
+    // Any read that will call a paid model counts against the limit. A remembered photo
+    // skips the vision call but still pays for her voice, so resending one photo must
+    // not buy unlimited voice calls.
+    if (!scene || !skipVoice) {
       const limit = await checkLimit(
         store,
         c.req.header("cf-connecting-ip") ?? "local",
@@ -223,7 +227,9 @@ export function createApp(deps: Deps = {}) {
         Number(env.READS_PER_DAY ?? 400),
       );
       if (!limit.ok) return fail(c, 429, limit.reason === "daily" ? "busy_day" : "slow_down");
+    }
 
+    if (!scene) {
       try {
         scene = fake
           ? body.prev
@@ -251,7 +257,6 @@ export function createApp(deps: Deps = {}) {
     const id = randomId(9);
     // Her hand-written lines are picked by the photo, so the same photo gets the same words.
     const draft = compose(scene, reading, memory?.id ?? id, diff ?? undefined);
-    const skipVoice = fake || (brain!.provider === "groq" && env.GROQ_VOICE !== "1");
     const voice = skipVoice
       ? draft
       : await tongue(
