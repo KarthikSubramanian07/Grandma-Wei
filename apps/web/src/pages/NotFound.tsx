@@ -5,6 +5,7 @@ import { onLinkClick } from "../lib/router";
 export function NotFound() {
   return (
     <main className="shell trouble fade-in">
+      <h1 className="sr-only">Page not found</h1>
       <Grandma mood="unimpressed" size={140} />
       <p className="trouble-msg">This page doesn't exist. Like the floor in some rooms I've seen.</p>
       <a className="btn btn-paper" href="/" onClick={onLinkClick}>
