@@ -20,15 +20,23 @@ export function Share({ id }: { id: string }) {
   if (missing)
     return (
       <main className="shell trouble fade-in">
+        <h1 className="sr-only">Shared reading not found</h1>
         <Grandma mood="unimpressed" size={140} />
         <p className="trouble-msg">I don't have that one. Maybe it was deleted. Maybe it was never mine.</p>
         <PhotoPicker primary="Show her your own room" />
       </main>
     );
-  if (!p) return <main className="shell reading-wait" aria-busy="true" />;
+  if (!p) {
+    return (
+      <main className="shell reading-wait" aria-busy="true">
+        <h1 className="sr-only">Loading shared reading</h1>
+      </main>
+    );
+  }
 
   return (
     <main className="shell shared fade-in">
+      <h1 className="sr-only">Shared reading: {p.headline}</h1>
       <p className="shared-kicker mono">Someone showed Grandma Wei their {p.kind.replace(/_/g, " ")}.</p>
       <article className="paper scorecard">
         <header className="sc-head">

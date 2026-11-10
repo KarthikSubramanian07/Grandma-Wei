@@ -31,12 +31,14 @@ export const PRACTICE = [
 
 export function Home() {
   const [line, setLine] = useState(0);
+  const [remarksPaused, setRemarksPaused] = useState(false);
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
+    if (remarksPaused || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(() => setLine((n) => (n + 1) % TEASERS.length), 3600);
     return () => clearInterval(id);
-  }, []);
+  }, [remarksPaused]);
 
   // Desktop: drop a photo anywhere on the page.
   useEffect(() => {
@@ -77,6 +79,9 @@ export function Home() {
           <div className="bubble paper" key={line} aria-live="polite">
             {TEASERS[line]}
           </div>
+          <button type="button" className="link-btn bubble-pause" onClick={() => setRemarksPaused((p) => !p)}>
+            {remarksPaused ? "Resume remarks" : "Pause remarks"}
+          </button>
           <Grandma mood="thinking" size={210} title="Grandma Wei, peering over her glasses" />
         </div>
         <div className="hero-copy">

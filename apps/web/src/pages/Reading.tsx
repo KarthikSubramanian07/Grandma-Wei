@@ -39,8 +39,20 @@ export function Reading({ source }: { source: Source }) {
     });
   }, [source]);
 
-  if (phase.t === "preparing") return <main className="shell reading-wait" aria-busy="true" />;
-  if (phase.t === "looking") return <main className="shell"><Looking src={phase.photo} /></main>;
+  if (phase.t === "preparing") {
+    return (
+      <main className="shell reading-wait" aria-busy="true">
+        <h1 className="sr-only">Getting ready</h1>
+      </main>
+    );
+  }
+  if (phase.t === "looking") {
+    return (
+      <main className="shell">
+        <Looking src={phase.photo} />
+      </main>
+    );
+  }
   if (phase.t === "error") return <Trouble message={phase.message} code={phase.code} />;
   return <Result env={phase.env} photo={phase.photo} visit={phase.visit} />;
 }
@@ -81,6 +93,7 @@ function Trouble({ message, code }: { message: string; code: string }) {
   const noEyes = code === "no_eyes" || code === "napping" || code === "resting";
   return (
     <main className="shell trouble fade-in">
+      <h1 className="sr-only">Something went wrong</h1>
       <Grandma mood="concerned" size={150} />
       <p className="trouble-msg">{message}</p>
       <div className="trouble-actions">
@@ -191,6 +204,7 @@ function Result({ env, photo, visit }: { env: Envelope; photo: string; visit: Vi
 
   return (
     <main className="result shell">
+      <h1 className="sr-only">{sample ? `Practice reading: ${voice.headline}` : `Her reading: ${voice.headline}`}</h1>
       {diff && <RetakeBanner diff={diff} line={voice.retake} />}
 
       <div className="result-grid">
