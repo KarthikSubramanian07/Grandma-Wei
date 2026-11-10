@@ -56,7 +56,9 @@ export function App() {
           {nav("/fridge", "Fridge")}
         </nav>
       </header>
-      <div id="main">{route(path)}</div>
+      <div id="main" tabIndex={-1}>
+        {route(path)}
+      </div>
       <footer className="footer shell">
         <span>
           Made with love and mild disappointment. Not affiliated with any real grandmother, though she has heard about this.
