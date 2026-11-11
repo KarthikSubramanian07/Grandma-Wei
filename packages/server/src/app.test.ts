@@ -266,6 +266,23 @@ describe("KV storage", () => {
 
 describe("same photo, same reading", () => {
   const groqEnv = { GROQ_API_KEY: "gsk", SIGNING_SECRET: "s", READS_PER_HOUR: "1" };
+
+  test("a remembered photo still counts when her voice costs a model call", async () => {
+    let spoke = 0;
+    const a = createApp({
+      store: new MemoryStore(),
+      eyes: async () => SAMPLES.traveler!.scene,
+      tongue: async (_brain, _scene, _reading, draft) => {
+        spoke++;
+        return draft;
+      },
+    });
+    const claudeEnv = { ANTHROPIC_API_KEY: "k", SIGNING_SECRET: "s", READS_PER_HOUR: "1" };
+    const read = () => a.request("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), claudeEnv);
+    expect((await read()).status).toBe(200);
+    expect((await read()).status).toBe(429);
+    expect(spoke).toBe(1);
+  });
   const photoA = tinyJpeg;
   const photoB = tinyJpeg.replace("/9j/", "/9k/");
 
