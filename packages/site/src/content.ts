@@ -105,7 +105,7 @@ Photos of your home are personal. Here is exactly what happens to yours.
 
 1. **Your phone shrinks the photo first.** It's resized and saved as a fresh JPEG in your browser, which removes hidden details like location and camera info, before anything is sent.
 2. **Grandma's eyes look at it once.** The photo goes to our server and on to an AI vision model (the open Qwen model, run by Groq), which describes the room as a list of facts (where the bed is, whether the floor is clear). The AI is told to ignore people and anything private, like papers or screens.
-3. **Then it's forgotten.** Our server never saves your photo and never logs it. Groq's handling of API data is described in its [privacy policy](https://groq.com/privacy-policy).
+3. **Then the photo is forgotten.** Our server never saves your photo and never logs it. So that the same photo always gets the same score, it keeps her notes about the room (never the photo) for 30 days, locked with a key made from the photo itself. Without your photo, nobody can find or read them, including us. Groq's handling of API data is described in its [privacy policy](https://groq.com/privacy-policy).
 4. **Your history stays with you.** Readings, photos and magnets on the fridge are stored in your browser only. Clear them any time from the fridge.
 5. **Sharing is text only, and undoable.** A shared link shows the scorecard (score, her words, the chores), never the photo. Deleting the reading from your fridge deletes the link too, and links expire on their own after a year.
 6. **No ads, no trackers, no accounts.** We count how many readings happen per hour to stop abuse, using a scrambled code, never your IP address.

@@ -1,7 +1,10 @@
 /**
- * Storage: rate-limit counters and shared scorecards. D1 in production,
- * memory in tests. Shares hold only the scorecard text, never a photo.
+ * Storage: rate-limit counters, shared scorecards, and encrypted photo
+ * memories (see memory.ts). KV or D1 in production, memory in tests.
+ * Nothing here ever holds a photo.
  */
+
+import { MEMORY_TTL_SECONDS } from "./memory";
 
 export interface Store {
   /** Increment a counter and return its new value. */
@@ -11,6 +14,9 @@ export interface Store {
   putShare(id: string, deleteHash: string, payload: string, created: number): Promise<void>;
   getShare(id: string): Promise<{ payload: string; deleteHash: string } | null>;
   deleteShare(id: string): Promise<boolean>;
+  /** An encrypted scene, kept for MEMORY_TTL_SECONDS. */
+  putMemory(id: string, blob: string, created: number): Promise<void>;
+  getMemory(id: string): Promise<string | null>;
 }
 
 export class D1Store implements Store {
@@ -49,6 +55,22 @@ export class D1Store implements Store {
     const res = await this.db.prepare("DELETE FROM shares WHERE id = ?1").bind(id).run();
     return (res.meta?.changes ?? 0) > 0;
   }
+
+  async putMemory(id: string, blob: string, created: number): Promise<void> {
+    await this.db
+      .prepare("INSERT OR REPLACE INTO memories (id, created, blob) VALUES (?1, ?2, ?3)")
+      .bind(id, created, blob)
+      .run();
+    await this.db.prepare("DELETE FROM memories WHERE created < ?1").bind(created - MEMORY_TTL_SECONDS * 1000).run();
+  }
+
+  async getMemory(id: string): Promise<string | null> {
+    const row = await this.db
+      .prepare("SELECT blob FROM memories WHERE id = ?1 AND created >= ?2")
+      .bind(id, Date.now() - MEMORY_TTL_SECONDS * 1000)
+      .first<{ blob: string }>();
+    return row?.blob ?? null;
+  }
 }
 
 /** Shared links last a year, then quietly disappear. */
@@ -83,6 +105,14 @@ export class KVStore implements Store {
     await this.kv.delete(`share:${id}`);
     return true;
   }
+
+  async putMemory(id: string, blob: string): Promise<void> {
+    await this.kv.put(`seen:${id}`, blob, { expirationTtl: MEMORY_TTL_SECONDS });
+  }
+
+  async getMemory(id: string): Promise<string | null> {
+    return this.kv.get(`seen:${id}`);
+  }
 }
 
 /** Pick storage from the bindings: D1 if bound, else KV, else none (sharing off). */
@@ -95,6 +125,7 @@ export function storeFromEnv(env: { DB?: D1Database; KV?: KVNamespace }): Store 
 export class MemoryStore implements Store {
   hits = new Map<string, number>();
   shares = new Map<string, { payload: string; deleteHash: string; created: number }>();
+  memories = new Map<string, string>();
 
   async bump(key: string, bucket: number) {
     const k = `${key}@${bucket}`;
@@ -111,5 +142,11 @@ export class MemoryStore implements Store {
   }
   async deleteShare(id: string) {
     return this.shares.delete(id);
+  }
+  async putMemory(id: string, blob: string) {
+    this.memories.set(id, blob);
+  }
+  async getMemory(id: string) {
+    return this.memories.get(id) ?? null;
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Layout, Scene, Wall } from "@gw/schema";
 import { qi } from "../lib/qi";
 
@@ -19,8 +19,15 @@ interface Props {
 /** Grandma's napkin sketch of the room, with qi flowing through it. */
 export function Sketch({ scene, suggestion, showSuggestion = false, label }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const pausedRef = useRef(false);
+  const [paused, setPaused] = useState(false);
+  const [canPause, setCanPause] = useState(false);
   const key = JSON.stringify([scene.layout, scene.facts.clutter, scene.facts.bed_door, scene.facts.door_window_aligned]);
   const field = useMemo(() => qi.field(scene, GW, GH), [key]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
 
   useEffect(() => {
     const cv = canvas.current;
@@ -31,6 +38,9 @@ export function Sketch({ scene, suggestion, showSuggestion = false, label }: Pro
     let visible = true;
     let running = true;
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setCanPause(!reduce);
+    setPaused(false);
+    pausedRef.current = false;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
 
     let W = 0;
@@ -123,7 +133,7 @@ export function Sketch({ scene, suggestion, showSuggestion = false, label }: Pro
 
     const loop = () => {
       if (!running) return;
-      if (visible) {
+      if (visible && !pausedRef.current) {
         step();
         draw();
       }
@@ -157,6 +167,11 @@ export function Sketch({ scene, suggestion, showSuggestion = false, label }: Pro
   return (
     <figure className="sketch">
       <canvas ref={canvas} role="img" aria-label={`Grandma's sketch of the room: ${desc}`} />
+      {canPause && (
+        <button type="button" className="link-btn sketch-pause" onClick={() => setPaused((p) => !p)}>
+          {paused ? "Play energy flow" : "Pause energy flow"}
+        </button>
+      )}
       {label && <figcaption className="mono">{label}</figcaption>}
     </figure>
   );

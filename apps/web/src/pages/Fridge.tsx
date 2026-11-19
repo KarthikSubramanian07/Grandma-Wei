@@ -32,7 +32,13 @@ export function Fridge() {
   const load = () => allVisits().then(setVisits, () => setVisits([]));
   useEffect(() => void load(), []);
 
-  if (!visits) return <main className="shell reading-wait" aria-busy="true" />;
+  if (!visits) {
+    return (
+      <main className="shell reading-wait" aria-busy="true">
+        <h1 className="sr-only">Loading the fridge</h1>
+      </main>
+    );
+  }
   const real = visits.filter((v) => !v.envelope.result.sample);
   const earned = new Map(magnetsOf(real).map((m) => [m.id, m.at]));
   const pair = findPair(real);

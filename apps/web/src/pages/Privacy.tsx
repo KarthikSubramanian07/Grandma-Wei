@@ -17,8 +17,10 @@ export function Privacy() {
           and anything private, like papers or screens.
         </li>
         <li>
-          <strong>Then it's forgotten.</strong> Our server never saves your photo and never logs it. Groq's handling of API data
-          is described in its{" "}
+          <strong>Then the photo is forgotten.</strong> Our server never saves your photo and never logs it. So that the same
+          photo always gets the same score, it keeps her notes about the room (never the photo) for 30 days, locked with a key
+          made from the photo itself. Without your photo, nobody can find or read them, including us. Groq's handling of API
+          data is described in its{" "}
           <a href="https://groq.com/privacy-policy" target="_blank" rel="noreferrer">
             privacy policy
           </a>

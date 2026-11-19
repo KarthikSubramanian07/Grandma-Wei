@@ -6,7 +6,7 @@
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "qi": "cd crates/qi && CARGO_BUILD_JOBS=2 wasm-pack build --release --target web --scope gw --out-dir ../../packages/qi --out-name qi -- --features wasm && rm -f ../../packages/qi/.gitignore",
-    "test": "bun run test:rust && bun test",
+    "test": "bun run test:rust && bun test packages",
     "test:rust": "cd crates/qi && CARGO_BUILD_JOBS=2 cargo test --quiet",
     "typecheck": "tsc -p tsconfig.json",
     "dev": "bun run --cwd apps/web dev",
