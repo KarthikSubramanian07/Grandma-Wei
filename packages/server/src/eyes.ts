@@ -1,5 +1,6 @@
 /**
- * Grandma's eyes: one call to Claude that turns a room photo into a Scene.
+ * Grandma's eyes: one call to a vision model (Claude, or an open model on
+ * Groq) that turns a room photo into a Scene.
  *
  * The model only observes. It fills in discrete facts and a rough sketch;
  * it never sees a score and never gives advice. The photo exists in memory
@@ -8,6 +9,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { Scene, sanitizeScene, sceneJsonSchema } from "@gw/schema";
+import { GroqError, groqJson } from "./groq";
 
 export const EYES_SYSTEM = `You are the eyes of a feng shui reader. You look at one photo of a room and report exactly what you see as JSON. You never give advice and never judge; another system does that.
 
@@ -45,7 +47,10 @@ observations: up to 5 specific, slightly funny-in-their-honesty things a sharp g
 
 confidence: "high" if the room is clear and well lit, "medium" if parts are hidden, "low" if the photo is blurry, dark, or a tight close-up.`;
 
+export type Provider = "anthropic" | "groq";
+
 export interface EyesConfig {
+  provider: Provider;
   apiKey: string;
   model: string;
   effort: "low" | "medium" | "high";
@@ -55,7 +60,7 @@ export type MediaType = "image/jpeg" | "image/png" | "image/webp";
 
 export class EyesError extends Error {
   constructor(
-    public code: "refused" | "unreadable" | "upstream" | "busy",
+    public code: "refused" | "unreadable" | "upstream" | "busy" | "tired",
     message: string,
   ) {
     super(message);
@@ -63,6 +68,40 @@ export class EyesError extends Error {
 }
 
 export async function look(cfg: EyesConfig, image: string, mediaType: MediaType): Promise<Scene> {
+  const json = cfg.provider === "groq" ? await lookGroq(cfg, image, mediaType) : await lookClaude(cfg, image, mediaType);
+  const parsed = Scene.safeParse(json);
+  if (!parsed.success) throw new EyesError("unreadable", "schema mismatch");
+  return sanitizeScene(parsed.data);
+}
+
+async function lookGroq(cfg: EyesConfig, image: string, mediaType: MediaType): Promise<unknown> {
+  try {
+    return await groqJson({
+      apiKey: cfg.apiKey,
+      model: cfg.model,
+      effort: cfg.effort,
+      system: EYES_SYSTEM,
+      user: [
+        { type: "image_url", image_url: { url: `data:${mediaType};base64,${image}` } },
+        { type: "text", text: "Report this room as JSON." },
+      ],
+      schemaName: "scene",
+      schema: sceneJsonSchema() as Record<string, unknown>,
+      maxTokens: 8000,
+      // She should see the same room the same way every time.
+      temperature: 0,
+      seed: 1,
+      timeoutMs: 60_000,
+      // Free-tier limits reset every minute; a short wait beats an error.
+      maxWaitMs: 25_000,
+    });
+  } catch (e) {
+    if (e instanceof GroqError) throw new EyesError(e.code, e.message);
+    throw new EyesError("upstream", "network error");
+  }
+}
+
+async function lookClaude(cfg: EyesConfig, image: string, mediaType: MediaType): Promise<unknown> {
   const client = new Anthropic({ apiKey: cfg.apiKey, maxRetries: 1, timeout: 90_000 });
   let res;
   try {
@@ -90,13 +129,9 @@ export async function look(cfg: EyesConfig, image: string, mediaType: MediaType)
   }
   if (res.stop_reason === "refusal") throw new EyesError("refused", "declined");
   const text = res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
-  let json: unknown;
   try {
-    json = JSON.parse(text);
+    return JSON.parse(text);
   } catch {
     throw new EyesError("unreadable", "not json");
   }
-  const parsed = Scene.safeParse(json);
-  if (!parsed.success) throw new EyesError("unreadable", "schema mismatch");
-  return sanitizeScene(parsed.data);
 }

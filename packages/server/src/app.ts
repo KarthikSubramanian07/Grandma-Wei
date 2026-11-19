@@ -3,7 +3,8 @@ import type { Context } from "hono";
 import { Scene } from "@gw/schema";
 import { compose } from "@gw/voice";
 import { engine } from "./engine";
-import { EyesError, look, type MediaType } from "./eyes";
+import { EYES_SYSTEM, EyesError, look, type MediaType, type Provider } from "./eyes";
+import { photoMemory, recall, remember } from "./memory";
 import { checkLimit } from "./limit";
 import { type Envelope, type ReadingResult, type Signed, sharePayload } from "./result";
 import { SAMPLES } from "./samples";
@@ -12,10 +13,22 @@ import { storeFromEnv, type Store } from "./store";
 import { personalize } from "./tongue";
 
 export interface Env {
+  /** Claude for her eyes and voice. */
   ANTHROPIC_API_KEY?: string;
+  /** Or an open model on Groq. Used when there's no Anthropic key, or when AI_PROVIDER is "groq". */
+  GROQ_API_KEY?: string;
+  AI_PROVIDER?: Provider;
   SIGNING_SECRET?: string;
   VISION_MODEL?: string;
   VOICE_MODEL?: string;
+  GROQ_VISION_MODEL?: string;
+  GROQ_VOICE_MODEL?: string;
+  /**
+   * "1" also personalizes her lines on Groq. Off by default: Groq's free tier
+   * allows about 1,000 output tokens a minute, and one photo reading uses most
+   * of that, so a second call would make the next person's reading fail.
+   */
+  GROQ_VOICE?: string;
   VISION_EFFORT?: "low" | "medium" | "high";
   VOICE_EFFORT?: "low" | "medium" | "high";
   /** "1" pauses new readings (samples and shares keep working). */
@@ -40,6 +53,38 @@ export interface Deps {
 }
 
 const DEFAULT_MODEL = "claude-opus-5-5";
+/** Groq's vision model with strict structured output. */
+const DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b";
+
+interface Brain {
+  provider: Provider;
+  apiKey: string;
+  vision: string;
+  voice: string;
+}
+
+/** Which model gives her eyes and voice: Claude if it has a key, otherwise Groq. */
+export function brainFor(env: Env): Brain | null {
+  const groq = (): Brain | null =>
+    env.GROQ_API_KEY
+      ? {
+          provider: "groq",
+          apiKey: env.GROQ_API_KEY,
+          vision: env.GROQ_VISION_MODEL ?? DEFAULT_GROQ_MODEL,
+          voice: env.GROQ_VOICE_MODEL ?? DEFAULT_GROQ_MODEL,
+        }
+      : null;
+  const claude = (): Brain | null =>
+    env.ANTHROPIC_API_KEY
+      ? {
+          provider: "anthropic",
+          apiKey: env.ANTHROPIC_API_KEY,
+          vision: env.VISION_MODEL ?? DEFAULT_MODEL,
+          voice: env.VOICE_MODEL ?? DEFAULT_MODEL,
+        }
+      : null;
+  return env.AI_PROVIDER === "groq" ? (groq() ?? claude()) : (claude() ?? groq());
+}
 const MAX_IMAGE_B64 = 3_000_000; // ~2.2 MB of image; the browser sends ~300 KB
 const MEDIA_TYPES = new Set<MediaType>(["image/jpeg", "image/png", "image/webp"]);
 
@@ -54,6 +99,8 @@ const ERR = {
   refused: "I'm not going to read that one. Show me a room.",
   unreadable: "I looked and looked and couldn't make sense of it. Try again from a corner, with the lights on.",
   upstream: "My eyes aren't working right now. Give it a minute and try again.",
+  crowded: "Everyone is showing me their rooms at once. Sit down, have some tea, and try again in a minute.",
+  resting: "I've read so many rooms today my eyes need a rest. Come back in a little while, or try a practice room.",
   forged: "That reading isn't one of mine.",
   no_fridge: "Sharing isn't switched on here yet.",
   not_found: "I don't have that one. Maybe it was deleted.",
@@ -65,10 +112,18 @@ function fail(c: Context, status: 400 | 403 | 404 | 413 | 429 | 502 | 503, code:
   return c.json({ error: code, message: ERR[code] }, status);
 }
 
+/** Names her eyes (provider, model, prompt), so changing any of them starts a fresh memory. */
+let eyesPromptHash: Promise<string> | null = null;
+async function eyesVersion(brain: Brain): Promise<string> {
+  eyesPromptHash ??= sha256(EYES_SYSTEM);
+  return `${brain.provider}:${brain.vision}:${await eyesPromptHash}`;
+}
+
 async function signingKey(env: Env): Promise<string> {
   if (env.SIGNING_SECRET) return env.SIGNING_SECRET;
   // Fall back to a key derived from the API key, so a deploy with only an API key is still safe.
-  if (env.ANTHROPIC_API_KEY) return sha256(`grandma-wei:sign:${env.ANTHROPIC_API_KEY}`);
+  const key = env.ANTHROPIC_API_KEY ?? env.GROQ_API_KEY;
+  if (key) return sha256(`grandma-wei:sign:${key}`);
   return "grandma-wei-local-development-only";
 }
 
@@ -115,7 +170,7 @@ export function createApp(deps: Deps = {}) {
     c.json({
       ok: true,
       rules_version: engine.version(),
-      eyes: Boolean(c.env?.ANTHROPIC_API_KEY) && c.env?.READS_PAUSED !== "1",
+      eyes: Boolean(brainFor(c.env ?? {})) && c.env?.READS_PAUSED !== "1",
       fridge: Boolean(storeFor(c.env ?? {})),
     }),
   );
@@ -136,8 +191,9 @@ export function createApp(deps: Deps = {}) {
   app.post("/api/read", async (c) => {
     const env = c.env ?? {};
     if (env.READS_PAUSED === "1") return fail(c, 503, "napping");
-    const fake = env.FAKE_EYES === "1" && !env.ANTHROPIC_API_KEY;
-    if (!env.ANTHROPIC_API_KEY && !fake) return fail(c, 503, "no_eyes");
+    const brain = brainFor(env);
+    const fake = env.FAKE_EYES === "1" && !brain;
+    if (!brain && !fake) return fail(c, 503, "no_eyes");
 
     let body: { image?: unknown; media_type?: unknown; prev?: { signed?: unknown; sig?: unknown } };
     try {
@@ -150,47 +206,61 @@ export function createApp(deps: Deps = {}) {
     if (image.length > MAX_IMAGE_B64) return fail(c, 413, "too_big");
     if (!MEDIA_TYPES.has(media_type as MediaType)) return fail(c, 400, "bad_image");
 
-    const limit = await checkLimit(
-      storeFor(env),
-      c.req.header("cf-connecting-ip") ?? "local",
-      await signingKey(env),
-      Number(env.READS_PER_HOUR ?? 12),
-      Number(env.READS_PER_DAY ?? 400),
-    );
-    if (!limit.ok) return fail(c, 429, limit.reason === "daily" ? "busy_day" : "slow_down");
+    // Same photo, same reading: she remembers what she saw (encrypted, never the photo).
+    const store = storeFor(env);
+    // (The test stand-in remembers first looks too, so memory is tested end to end
+    // in the real runtime; its retakes always look fresh so they can show progress.)
+    const memory = fake && body.prev ? null : await photoMemory(image, fake ? "fake" : await eyesVersion(brain!));
+    let scene = memory ? await recall(store, memory) : null;
+    const remembered = scene !== null;
 
-    let scene: Scene;
-    try {
-      scene = fake
-        ? body.prev
-          ? engine.imagine(SAMPLES.traveler!.scene, ["move_bed", "declutter", "real_plant"])
-          : SAMPLES.traveler!.scene
-        : await eyes(
-            { apiKey: env.ANTHROPIC_API_KEY!, model: env.VISION_MODEL ?? DEFAULT_MODEL, effort: env.VISION_EFFORT ?? "medium" },
-            image,
-            media_type as MediaType,
-          );
-    } catch (e) {
-      const code = e instanceof EyesError ? e.code : "upstream";
-      if (code === "refused") return fail(c, 400, "refused");
-      if (code === "unreadable") return fail(c, 502, "unreadable");
-      if (code === "busy") return fail(c, 503, "upstream");
-      return fail(c, 502, "upstream");
+    if (!scene) {
+      const limit = await checkLimit(
+        store,
+        c.req.header("cf-connecting-ip") ?? "local",
+        await signingKey(env),
+        Number(env.READS_PER_HOUR ?? 12),
+        Number(env.READS_PER_DAY ?? 400),
+      );
+      if (!limit.ok) return fail(c, 429, limit.reason === "daily" ? "busy_day" : "slow_down");
+
+      try {
+        scene = fake
+          ? body.prev
+            ? engine.imagine(SAMPLES.traveler!.scene, ["move_bed", "declutter", "real_plant"])
+            : SAMPLES.traveler!.scene
+          : await eyes(
+              { provider: brain!.provider, apiKey: brain!.apiKey, model: brain!.vision, effort: env.VISION_EFFORT ?? "medium" },
+              image,
+              media_type as MediaType,
+            );
+      } catch (e) {
+        const code = e instanceof EyesError ? e.code : "upstream";
+        if (code === "refused") return fail(c, 400, "refused");
+        if (code === "unreadable") return fail(c, 502, "unreadable");
+        if (code === "busy") return fail(c, 503, "crowded");
+        if (code === "tired") return fail(c, 503, "resting");
+        return fail(c, 502, "upstream");
+      }
+      if (memory) await remember(store, memory, scene);
     }
 
     const prev = body.prev ? await openSigned(env, body.prev.signed, body.prev.sig) : null;
     const reading = engine.read(scene);
     const diff = prev ? engine.diff(prev.scene, scene) : null;
     const id = randomId(9);
-    const draft = compose(scene, reading, id, diff ?? undefined);
-    const voice = fake
+    // Her hand-written lines are picked by the photo, so the same photo gets the same words.
+    const draft = compose(scene, reading, memory?.id ?? id, diff ?? undefined);
+    const skipVoice = fake || (brain!.provider === "groq" && env.GROQ_VOICE !== "1");
+    const voice = skipVoice
       ? draft
       : await tongue(
-          { apiKey: env.ANTHROPIC_API_KEY!, model: env.VOICE_MODEL ?? DEFAULT_MODEL, effort: env.VOICE_EFFORT ?? "low" },
+          { provider: brain!.provider, apiKey: brain!.apiKey, model: brain!.voice, effort: env.VOICE_EFFORT ?? "low" },
           scene,
           reading,
           draft,
         );
+    if (remembered) c.header("X-Grandma-Remembered", "1");
     return c.json(await envelope(env, { v: 1, id, sample: null, scene, voice, diff }));
   });
 

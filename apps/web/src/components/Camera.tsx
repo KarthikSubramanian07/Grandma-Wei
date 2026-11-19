@@ -66,15 +66,49 @@ export function Camera({ ghost, onCapture, onLibrary, onClose }: Props) {
     [],
   );
 
-  // Escape closes; the page behind doesn't scroll.
+  // Escape closes, focus stays inside the sheet, and we restore it on close.
+  // The page behind doesn't scroll.
   useEffect(() => {
-    const prev = document.body.style.overflow;
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const prevFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const root = document.querySelector<HTMLElement>(".camera");
+    const focusables = () =>
+      root
+        ? [...root.querySelectorAll<HTMLElement>("button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])")].filter(
+            (el) => el.getClientRects().length > 0,
+          )
+        : [];
+    const first = focusables()[0];
+    (first ?? root)?.focus();
+
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !root) return;
+      const items = focusables();
+      if (items.length === 0) {
+        e.preventDefault();
+        root.focus();
+        return;
+      }
+      const head = items[0]!;
+      const tail = items[items.length - 1]!;
+      if (e.shiftKey && document.activeElement === head) {
+        e.preventDefault();
+        tail.focus();
+      } else if (!e.shiftKey && document.activeElement === tail) {
+        e.preventDefault();
+        head.focus();
+      }
+    };
     window.addEventListener("keydown", key);
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", key);
+      prevFocus?.focus();
     };
   }, [onClose]);
 
@@ -100,7 +134,7 @@ export function Camera({ ghost, onCapture, onLibrary, onClose }: Props) {
   };
 
   const sheet = (
-    <div className="camera" role="dialog" aria-modal="true" aria-label="Take a photo of your room">
+    <div className="camera" role="dialog" aria-modal="true" aria-label="Take a photo of your room" tabIndex={-1}>
       <video ref={video} playsInline muted autoPlay className={facing === "user" ? "mirror" : ""} />
       {ghost && showGhost && state.t === "live" && <img className="camera-ghost" src={ghost} alt="" />}
       {flash && <div className="camera-flash" onAnimationEnd={() => setFlash(false)} />}
@@ -143,7 +177,6 @@ export function Camera({ ghost, onCapture, onLibrary, onClose }: Props) {
           <button
             className="camera-side"
             onClick={() => setFacing((f) => (f === "environment" ? "user" : "environment"))}
-            aria-label="Switch camera"
           >
             Flip
           </button>

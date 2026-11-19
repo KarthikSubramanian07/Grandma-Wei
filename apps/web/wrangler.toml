@@ -1,4 +1,5 @@
-# Cloudflare Pages project. Deploys from CI: see .github/workflows/deploy.yml.
+# Cloudflare Pages project. Deploy with `bun run deploy` (scripts/deploy.sh).
+# Her eyes: set GROQ_API_KEY (or ANTHROPIC_API_KEY) as a Pages secret.
 name = "grandma-wei"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-10-13"
@@ -7,6 +8,8 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 VISION_MODEL = "claude-opus-5-5"
 VOICE_MODEL = "claude-opus-5-5"
+GROQ_VISION_MODEL = "qwen/qwen3.8-27b"
+GROQ_VOICE_MODEL = "qwen/qwen3.8-27b"
 VISION_EFFORT = "medium"
 VOICE_EFFORT = "low"
 READS_PER_HOUR = "12"

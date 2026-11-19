@@ -1,0 +1,122 @@
+/**
+ * A tiny Groq client: one chat completion that must come back as JSON.
+ * Plain fetch, no SDK, so it runs the same in Workers, Bun and tests.
+ *
+ * Asks for strict structured output (constrained decoding, so the JSON always
+ * matches the schema). If a model rejects the schema with a 400, it retries
+ * once in plain JSON mode; the caller validates the result either way.
+ */
+
+export const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+
+export type Effort = "low" | "medium" | "high";
+
+type Part = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
+
+export interface GroqRequest {
+  apiKey: string;
+  model: string;
+  effort: Effort;
+  system: string;
+  user: string | Part[];
+  schemaName: string;
+  schema: Record<string, unknown>;
+  maxTokens: number;
+  temperature: number;
+  /** Best-effort deterministic sampling. */
+  seed?: number;
+  timeoutMs: number;
+  /** On a 429, wait as Groq asks and retry (up to 3 times) while the total wait stays under this. */
+  maxWaitMs?: number;
+  fetch?: typeof fetch;
+  sleep?: (ms: number) => Promise<void>;
+}
+
+/** A limit that won't clear for this long means the day's budget is spent, not a crowd. */
+export const TIRED_AFTER_MS = 2 * 60_000;
+
+export class GroqError extends Error {
+  constructor(
+    public code: "refused" | "unreadable" | "upstream" | "busy" | "tired",
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+interface Completion {
+  choices?: { finish_reason?: string; message?: { content?: string | null; refusal?: string | null } }[];
+}
+
+export async function groqJson(req: GroqRequest): Promise<unknown> {
+  const doFetch = req.fetch ?? fetch;
+  const body = (strict: boolean) => ({
+    model: req.model,
+    messages: [
+      { role: "system", content: req.system },
+      { role: "user", content: req.user },
+    ],
+    response_format: strict
+      ? { type: "json_schema", json_schema: { name: req.schemaName, strict: true, schema: req.schema } }
+      : { type: "json_object" },
+    reasoning_effort: req.effort,
+    reasoning_format: "hidden",
+    temperature: req.temperature,
+    ...(req.seed === undefined ? {} : { seed: req.seed }),
+    max_completion_tokens: req.maxTokens,
+  });
+
+  const send = async (strict: boolean): Promise<Response> => {
+    try {
+      return await doFetch(GROQ_URL, {
+        method: "POST",
+        headers: { authorization: `Bearer ${req.apiKey}`, "content-type": "application/json" },
+        body: JSON.stringify(body(strict)),
+        signal: AbortSignal.timeout(req.timeoutMs),
+      });
+    } catch {
+      throw new GroqError("upstream", "network error");
+    }
+  };
+
+  let res = await send(true);
+  if (res.status === 400) res = await send(false);
+  // Free-tier budgets refill continuously, so a few short waits usually get through.
+  const sleep = req.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  let budget = req.maxWaitMs ?? 0;
+  for (let tries = 0; res.status === 429 && tries < 3; tries++) {
+    const wait = retryAfterMs(res);
+    if (wait === null || wait > budget) break;
+    budget -= wait;
+    await sleep(wait);
+    res = await send(true);
+  }
+  if (res.status === 429) {
+    const wait = retryAfterMs(res);
+    throw wait !== null && wait > TIRED_AFTER_MS
+      ? new GroqError("tired", "daily budget spent")
+      : new GroqError("busy", "rate limited upstream");
+  }
+  if (!res.ok) throw new GroqError("upstream", `api error ${res.status}`);
+
+  let data: Completion;
+  try {
+    data = (await res.json()) as Completion;
+  } catch {
+    throw new GroqError("upstream", "bad response");
+  }
+  const choice = data.choices?.[0];
+  if (choice?.message?.refusal) throw new GroqError("refused", "declined");
+  if (choice?.finish_reason === "length") throw new GroqError("unreadable", "cut off");
+  try {
+    return JSON.parse(choice?.message?.content ?? "");
+  } catch {
+    throw new GroqError("unreadable", "not json");
+  }
+}
+
+/** Groq says when to come back in a retry-after header (seconds). */
+export function retryAfterMs(res: Response): number | null {
+  const s = Number(res.headers.get("retry-after"));
+  return Number.isFinite(s) && s >= 0 && res.headers.has("retry-after") ? Math.ceil(s * 1000) : null;
+}

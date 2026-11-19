@@ -2,6 +2,8 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Scene } from "@gw/schema";
+import { brainFor } from "./app";
+import { EyesError } from "./eyes";
 import { createApp, initEngine, MemoryStore, type Envelope } from "./index";
 import { SAMPLES } from "./samples";
 
@@ -11,6 +13,8 @@ beforeAll(() => {
 
 const env = { ANTHROPIC_API_KEY: "test-key", SIGNING_SECRET: "test-secret" };
 const tinyJpeg = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/";
+/** A different photo each time (she remembers ones she's seen). */
+const photoN = (n: number) => `${tinyJpeg}${"A".repeat(n)}`;
 
 function app(opts: { scene?: Scene; store?: MemoryStore | null; tongueThrows?: boolean } = {}) {
   const store = opts.store === undefined ? new MemoryStore() : opts.store;
@@ -66,6 +70,70 @@ describe("health and samples", () => {
   });
 });
 
+describe("choosing her eyes", () => {
+  test("Claude when it has a key, Groq otherwise, and AI_PROVIDER can prefer Groq", () => {
+    expect(brainFor({})).toBeNull();
+    expect(brainFor({ ANTHROPIC_API_KEY: "a" })).toMatchObject({ provider: "anthropic", vision: "claude-opus-5-5" });
+    expect(brainFor({ GROQ_API_KEY: "g" })).toMatchObject({ provider: "groq", apiKey: "g", vision: "qwen/qwen3.8-27b" });
+    expect(brainFor({ ANTHROPIC_API_KEY: "a", GROQ_API_KEY: "g" })?.provider).toBe("anthropic");
+    expect(brainFor({ ANTHROPIC_API_KEY: "a", GROQ_API_KEY: "g", AI_PROVIDER: "groq" })?.provider).toBe("groq");
+    expect(brainFor({ ANTHROPIC_API_KEY: "a", AI_PROVIDER: "groq" })?.provider).toBe("anthropic");
+    expect(brainFor({ GROQ_API_KEY: "g", GROQ_VISION_MODEL: "x/y", VISION_MODEL: "claude-z" })?.vision).toBe("x/y");
+  });
+
+  test("a Groq key alone switches photo readings on and reaches the eyes and voice", async () => {
+    const seen: string[] = [];
+    const a = createApp({
+      store: new MemoryStore(),
+      eyes: async (cfg) => {
+        seen.push(`eyes:${cfg.provider}:${cfg.model}:${cfg.apiKey}`);
+        return SAMPLES.traveler!.scene;
+      },
+      tongue: async (cfg, _s, _r, draft) => {
+        seen.push(`voice:${cfg.provider}:${cfg.model}`);
+        return draft;
+      },
+    });
+    const groqEnv = { GROQ_API_KEY: "gsk_live", SIGNING_SECRET: "s" };
+    expect(await json(await a.request("/api/health", undefined, groqEnv))).toMatchObject({ eyes: true });
+    const r = await a.request("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), groqEnv);
+    expect(r.status).toBe(200);
+    expect(((await json(r)) as Envelope).result.reading.score).toBe(49);
+    // Her hand-written lines, so the free tier's per-minute budget goes to the eyes.
+    expect(seen).toEqual(["eyes:groq:qwen/qwen3.8-27b:gsk_live"]);
+
+    seen.length = 0;
+    const withVoice = { ...groqEnv, GROQ_VOICE: "1" };
+    expect((await a.request("/api/read", post({ image: photoN(1), media_type: "image/jpeg" }), withVoice)).status).toBe(200);
+    expect(seen).toEqual(["eyes:groq:qwen/qwen3.8-27b:gsk_live", "voice:groq:qwen/qwen3.8-27b"]);
+  });
+});
+
+describe("when her eyes fail", () => {
+  test("each failure gets its own status and a message in her voice", async () => {
+    const cases: [EyesError["code"], number, string][] = [
+      ["busy", 503, "crowded"],
+      ["tired", 503, "resting"],
+      ["refused", 400, "refused"],
+      ["unreadable", 502, "unreadable"],
+      ["upstream", 502, "upstream"],
+    ];
+    for (const [code, status, error] of cases) {
+      const a = createApp({
+        store: new MemoryStore(),
+        eyes: async () => {
+          throw new EyesError(code, "test");
+        },
+      });
+      const r = await a.request("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), env);
+      expect(r.status).toBe(status);
+      const body = await json(r);
+      expect(body.error).toBe(error);
+      expect(body.message.length).toBeGreaterThan(10);
+    }
+  });
+});
+
 describe("reading a photo", () => {
   test("without an API key, she says she left her glasses at home", async () => {
     const r = await app().req("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), {});
@@ -114,8 +182,8 @@ describe("reading a photo", () => {
   test("rate limits per visitor", async () => {
     const h = app();
     const e = { ...env, READS_PER_HOUR: "2" };
-    for (let i = 0; i < 2; i++) expect((await h.req("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), e)).status).toBe(200);
-    const r = await h.req("/api/read", post({ image: tinyJpeg, media_type: "image/jpeg" }), e);
+    for (let i = 0; i < 2; i++) expect((await h.req("/api/read", post({ image: photoN(i), media_type: "image/jpeg" }), e)).status).toBe(200);
+    const r = await h.req("/api/read", post({ image: photoN(2), media_type: "image/jpeg" }), e);
     expect(r.status).toBe(429);
     expect((await json(r)).error).toBe("slow_down");
   });
@@ -189,5 +257,68 @@ describe("KV storage", () => {
     expect(await store.getShare("abc")).toEqual({ payload: '{"a":1}', deleteHash: "hash" });
     await store.deleteShare("abc");
     expect(await store.getShare("abc")).toBeNull();
+    await store.putMemory("m1", "sealed");
+    expect(await store.getMemory("m1")).toBe("sealed");
+    expect(mem.has("seen:m1")).toBe(true);
+    expect(await store.getMemory("nope")).toBeNull();
+  });
+});
+
+describe("same photo, same reading", () => {
+  const groqEnv = { GROQ_API_KEY: "gsk", SIGNING_SECRET: "s", READS_PER_HOUR: "1" };
+  const photoA = tinyJpeg;
+  const photoB = tinyJpeg.replace("/9j/", "/9k/");
+
+  test("she reads a photo once, then remembers it, even past the hourly limit", async () => {
+    const store = new MemoryStore();
+    let looked = 0;
+    const a = createApp({
+      store,
+      eyes: async () => {
+        // A model that never describes a room the same way twice.
+        looked++;
+        return looked === 1 ? SAMPLES.traveler!.scene : SAMPLES.attic!.scene;
+      },
+    });
+    const read = (image: string) => a.request("/api/read", post({ image, media_type: "image/jpeg" }), groqEnv);
+
+    const first = await read(photoA);
+    expect(first.status).toBe(200);
+    expect(first.headers.get("X-Grandma-Remembered")).toBeNull();
+    const one = ((await json(first)) as Envelope).result;
+
+    const again = await read(photoA);
+    expect(again.status).toBe(200);
+    expect(again.headers.get("X-Grandma-Remembered")).toBe("1");
+    const two = ((await json(again)) as Envelope).result;
+    expect(looked).toBe(1);
+    expect(two.reading.score).toBe(one.reading.score);
+    expect(two.voice.headline).toBe(one.voice.headline);
+    expect(two.scene).toEqual(one.scene);
+    expect(two.id).not.toBe(one.id);
+
+    // Only what's encrypted is kept: no photo, no room details in storage.
+    const stored = [...store.memories.values()].join("");
+    expect(stored).not.toContain(photoA);
+    expect(stored).not.toContain("coffin");
+
+    // A new photo is a new look, and that one does count toward the limit.
+    expect((await read(photoB)).status).toBe(429);
+    expect(looked).toBe(1);
+  });
+
+  test("without storage she still reads every photo", async () => {
+    let looked = 0;
+    const a = createApp({
+      store: null,
+      eyes: async () => {
+        looked++;
+        return SAMPLES.traveler!.scene;
+      },
+    });
+    for (let i = 0; i < 2; i++) {
+      expect((await a.request("/api/read", post({ image: photoA, media_type: "image/jpeg" }), groqEnv)).status).toBe(200);
+    }
+    expect(looked).toBe(2);
   });
 });

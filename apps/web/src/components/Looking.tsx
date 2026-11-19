@@ -21,11 +21,13 @@ const LINES = [
 export function Looking({ src }: { src: string }) {
   const [i, setI] = useState(0);
   useEffect(() => {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = setInterval(() => setI((n) => (n + 1) % LINES.length), 1900);
     return () => clearInterval(id);
   }, []);
   return (
     <section className="looking" aria-live="polite" aria-busy="true">
+      <h1 className="sr-only">She's looking at your room</h1>
       <div className="looking-photo paper">
         <img src={src} alt="Your room, on Grandma's table" />
         <div className="loupe" aria-hidden="true" />
