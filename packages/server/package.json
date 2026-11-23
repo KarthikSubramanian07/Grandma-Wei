@@ -6,10 +6,10 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "dependencies": {
-    "@anthropic-ai/sdk": "^1.8.0",
+    "@anthropic-ai/sdk": "^1.11.0",
     "@gw/qi": "workspace:*",
     "@gw/schema": "workspace:*",
     "@gw/voice": "workspace:*",
-    "hono": "^4.13.18"
+    "hono": "^4.13.19"
   }
 }
